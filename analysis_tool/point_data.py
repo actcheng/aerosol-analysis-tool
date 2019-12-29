@@ -30,7 +30,7 @@ class PointData(Data):
 
     def site_avg(self,period=None, year=None,site_info_columns=['Latitude', 'Longitude','Altitude']):
         df = (filter_time(self._all_data,'Start date',period=period,year=year)
-             .groupby(by=self._avg_by).agg(['mean','count']))
+             .groupby(by=self._avg_by).agg(['mean','count','std']))
         return df if not site_info_columns else df.merge(self._site_info[site_info_columns],left_index=True,right_index=True)
 
     def annual_avg(self):

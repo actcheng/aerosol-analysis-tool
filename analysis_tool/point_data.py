@@ -32,7 +32,7 @@ class PointData(Data):
         return
 
 
-    def site_avg(self, type='all',daily_grouped=False,agg=['mean','count'],
+    def site_avg(self, type='all',agg=['mean','count'],
                 period=None, year=None,                
                 site_info_columns=['Latitude', 'Longitude','Altitude']):
 
@@ -49,7 +49,6 @@ class PointData(Data):
                 - "years"       : Group by sites & years
                 - "years_all"   : "years" + statistics of annual means 
             - agg: aggregate option to groupby object, defaults to ['mean','count']
-            - daily_grouped : Calculate the
 
             For filtering time
             - period: [start datetime, end datetime]

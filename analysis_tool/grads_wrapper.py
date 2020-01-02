@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from py3grads import Grads
 from analysis_utils import lon180,lon360
 
@@ -7,8 +8,10 @@ class GradsWrapper():
         self._ga = Grads(verbose=verbose)
         self._files = []
         self._definitions = {}
-        self._print = False 
+        self._print = False
         self._maxlon = 360
+
+        self._ga('set gxout print')
         
     def get_ga(self):
         return self._ga
@@ -68,6 +71,10 @@ class GradsWrapper():
         res = [float(x) for x in out[0].split()[-2:]]
         return res if lat2 else res[0]
 
+    def zlevel(self,z,z2=''):
+        out,_ = self.ga_run('set z {} {}'.format(z,z2))
+        return
+
     def time(self,t,t2=''):
         return self.ga_run('set t {} {}'.format(t,t2))
 
@@ -108,20 +115,25 @@ class GradsWrapper():
     def locate(self,lat,lon):
         return self.lat(lat), self.lon(lon)
 
-    def get_single_point(self,var,lat,lon,trange=None,t=1,op=''):
+    def get_single_point(self,var,lat,lon,t=1,trange=None,zrange=None,**kwargs):
         
         self.locate(lat,lon)
         self.time(t)
         if trange:
             try:
-                return float(self.tave(var,trange,op=op)[0][1].split()[-1])
+                if zrange:
+                    self.zlevel(zrange[0],zrange[1])
+                    out = ' '.join(self.tave(var,trange,**kwargs)[0][2:-1])
+                    return np.array([float(x) for x in out.split()])
+                else:
+                    return float(self.tave(var,trange,**kwargs)[0][1].split()[-1])
             except:
                 print('Error in get_single_point')
                 print('Output from Grads:')
                 print(self.tave(var,trange))
         else: # Snapshot
             try:
-                return float(self.display(var,op=op)[0][0].split()[-1])
+                return float(self.display(var,**kwargs)[0][0].split()[-1])
             except:
                 print('Error in get_single_point')
                 print('Output from Grads:')

@@ -29,8 +29,6 @@ def filter_time(df,col='',period=[],year=None,month=None):
     else:
         return df
 
-# def remove_outliers(df,quantile=0.01):
-#     return df.between(df.quantile(quantile), df.quantile(1.0-quantile))
 def remove_outlier(series_in):
     q1 = series_in.quantile(0.25)
     q3 = series_in.quantile(0.75)

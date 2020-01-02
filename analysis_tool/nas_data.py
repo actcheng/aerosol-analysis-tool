@@ -13,9 +13,10 @@ Attributes:
 Utils
 """
 from point_data import PointData
-from analysis_utils import day_to_date, draw_progress_bar
+from analysis_utils import day_to_date, draw_progress_bar, remove_outlier
 import pandas as pd
 import numpy as np
+from scipy import stats
 import datetime
 
 fields_required = {'Station name':      lambda x: x, 
@@ -87,7 +88,13 @@ class NasData(PointData):
             # Replace undef to np.nan
             for col in values.columns:
                 if col in headers['Undef']:
-                    values[col] = values[col].replace(headers['Undef'][col],np.nan)
+                    if values[col].dtypes != type(headers['Undef'][col]):
+                        values[col] = values[col].astype(type(headers['Undef'][col]))
+                    values[col] = values[col].mask(np.isclose(values[col], headers['Undef'][col]))
+                    # Remove outliers
+                if values[col].dtypes == float and 'time' not in col:
+                    # values[col] = values[col].mask(np.abs(stats.zscore(values[col])) > 3)
+                    values[col] = remove_outlier(values[col])
 
             # Change starttime, endtime types
             for time,date in [('starttime','Start date'),('endtime','End date')]:
@@ -96,6 +103,7 @@ class NasData(PointData):
             cols = list(values.columns)
 
             values = values[cols[-3:]+cols[:-3]]
+            
             # Concat to _all_data
             self._all_data = pd.concat([self._all_data,values],ignore_index=True,sort=True)
 

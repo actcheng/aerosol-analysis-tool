@@ -24,19 +24,68 @@ class PointData(Data):
     def get_site_info(self):
         return self._site_info
 
+    def set_all_data(self,df):
+        self._all_data = df
+
     def set_site_info(self,df,columns=['Latitude', 'Longitude','Altitude']):
         self._site_info = df[columns]
         return
 
-    def site_avg(self,period=None, year=None,site_info_columns=['Latitude', 'Longitude','Altitude']):
-        df = (filter_time(self._all_data,'Start date',period=period,year=year)
-             .groupby(by=self._avg_by).agg(['mean','count','std']))
-        return df if not site_info_columns else df.merge(self._site_info[site_info_columns],left_index=True,right_index=True)
 
-    def annual_avg(self):
-        pass
+    def site_avg(self, type='all',daily_grouped=False,agg=['mean','count'],
+                period=None, year=None,                
+                site_info_columns=['Latitude', 'Longitude','Altitude']):
+
+        """ 
+            Function to calculate site averages from data
+
+            Parameters:
+
+            For groupby methods
+            - type: str, defaults to "all"
+                - "all"         : Group by sites 
+                - "months_cycle": Group by sites & months of year
+                - "months"      : Group by sites & months of each year
+                - "years"       : Group by sites & years
+                - "years_all"   : "years" + statistics of annual means 
+            - agg: aggregate option to groupby object, defaults to ['mean','count']
+            - daily_grouped : Calculate the
+
+            For filtering time
+            - period: [start datetime, end datetime]
+            - year: int, defaults to None
+
+            For merging results with site information
+            - site_info_columns: list of column names, defaults to 'Latitude', 'Longitude','Altitude']
+
+        """
+
+        filtered = filter_time(self._all_data,'Start date',period=period,year=year)
+        
+        if daily_grouped:
+            filtered = filtered.groupby([self._all_data[self._avg_by],pd.Grouper(key='Start date', freq='1D')]).mean().reset_index()
+
+        gb = [self._all_data[self._avg_by]]
+        if type == 'months_cycle':
+            gb.append(self._all_data['Start date'].dt.month)
+        elif type == 'months':
+            gb.append(pd.Grouper(key='Start date', freq='1M'))
+        elif type == 'years' or type == 'years_all':
+            gb.append(self._all_data['Start date'].dt.year)
+
+        if type == 'years_all':
+            df = filtered.groupby(gb).mean().reset_index().drop(['Start date'],axis=1).groupby(by=self._avg_by).agg(agg)
+        else:
+            df = filtered.groupby(gb).agg(agg)
+
+        return self.avg_merger(df,site_info_columns)
+
+    def avg_merger(self,df,site_info_columns=['Latitude', 'Longitude','Altitude']):
+        """Merge site information to average data"""
+        return  df if not site_info_columns else df.merge(self._site_info[site_info_columns],left_index=True,right_index=True)
 
     def plot_data_range(self,varlist,figsize=(8,10)):
+        """Plot the time range where data is available at each site"""
         year2mdate = lambda x: mdates.date2num(datetime.datetime(x.year,1,1))
         start_year = year2mdate(self._all_data['Start date'].min())
         end_year = year2mdate(self._all_data['Start date'].max())

@@ -34,10 +34,10 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
             avg = self.get_grads_avg(grads_dir,[t.get_var_name()],*args,zrange=[1,t.get_bin_num()],**kwargs)
             df_avg = df_avg.merge(avg[t.get_varlist()],left_index=True,right_index=True)
 
-        if cal_total:
-            dv_avg = self.get_total_size_dist(df_avg)
- 
         self._avg_data = df_avg
+        if cal_total:
+            dv_avg = self.get_total_size_dist()
+            self._avg_data = df_avg
         return df_avg
 
     def get_total_size_dist(self): 
@@ -63,25 +63,28 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
             return
 
         def summation(row):
-            left, right = 0, 0
+            left, right = [],[]
             if cutoff_column: 
                 cutoff_val = list(row[cutoff_column])[0] / cutoff_scale 
             else:
                 cutoff_val = cutoff
 
             for t in self._type_info:
+                left.append(0)
+                right.append(0)
                 centers = t.get_bin_centers()
                 for i, col in enumerate(t.get_varlist()):
                     if centers[i] < cutoff_val:
-                        left += row[col]
+                        left[-1] += row[col]
                     else:
-                        right += row[col]
+                        right[-1] += row[col]
 
-            return [left,right]
+            return [sum(left),sum(right)] + left + right
 
+        columns = ['left','right'] + [f'{side}.{t.get_var_prefix()}' for side in ['left', 'right'] for t in self._type_info]
         df_part = pd.DataFrame(self._avg_data.apply(lambda x: summation(x),axis=1)
                                    .values.tolist(),
-                                columns=['left','right'],
+                                columns=columns,
                                 index=self._avg_data.index)
         return self._site_info.merge(df_part,left_index=True,right_index=True)
     

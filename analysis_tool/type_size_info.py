@@ -42,6 +42,7 @@ class TypeSizeInfo():
             self._bin_num = bin_num
             self._bin_range = bin_range
             self._bin_centers = cal_bin_centers(bin_num,bin_range)
+            self.set_varlist() 
 
     # Access information
     def get_aerosol_name(self):
@@ -55,6 +56,7 @@ class TypeSizeInfo():
     
     def set_var_type(self,var_type):
         self._var_type = var_type
+        self.set_varlist()
 
     def get_var_name(self):
         return self._var_prefix + self._var_type
@@ -84,7 +86,9 @@ class TypeSizeInfo():
             print('Inconsistent number of bins! bin_num={}, input_length={}'.format(self._bin_num,len(bin_centers)))
 
     def get_varlist(self):
-        return [f'{self.get_var_name()}.{i+1}' for i in range(self._bin_num)]
+        return self._varlist
+    def set_varlist(self):
+        self._varlist =  [f'{self.get_var_name()}.{i+1}' for i in range(self._bin_num)]
 
     def map_values(self,val_orig,bin_centers_new):
         if self._size_type == 'bin':

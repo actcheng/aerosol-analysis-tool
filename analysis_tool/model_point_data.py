@@ -1,5 +1,6 @@
 from point_data import PointData
 from grads_wrapper import GradsWrapper
+from analysis_utils import draw_progress_bar
 import pandas as pd
 import numpy as np
 import datetime 
@@ -10,6 +11,10 @@ class ModelPointData(PointData):
     def __init__(self):
         PointData.__init__(self)
         self._sites = set()
+        self._avg_data = pd.DataFrame()
+
+    def get_avg_data(self):
+        return self._avg_data
 
     def read_grads_all(self,grads_dir,grads_names,start_date,time_range=[1,1],deltaseconds=60*60*24,**kwargs):
         if type(grads_names) != list: grads_names = [grads_names]
@@ -51,6 +56,9 @@ class ModelPointData(PointData):
         df_avg = self._site_info.copy()
         ga = GradsWrapper()
 
+        data_num = len(grads_names)*len(self._site_info.index)*len(time_ranges)
+        processed = 0
+
         for grads_name in grads_names:
             for i in range(len(time_ranges)):
                 trange = time_ranges[i]
@@ -67,9 +75,12 @@ class ModelPointData(PointData):
                         for j in range(len(value)):
                             name = f'{grads_name}.{j+1}'
                             df_avg.at[site,name] = value[j] + (df_avg.at[site,name] if i>0 else 0)
+                    processed+=1
+                    draw_progress_bar(processed/data_num)
 
                 ga.close()
 
+        self._avg_data = df_avg 
         return df_avg
 
 

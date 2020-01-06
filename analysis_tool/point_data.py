@@ -61,9 +61,6 @@ class PointData(Data):
 
         filtered = filter_time(self._all_data,'Start date',period=period,year=year)
         
-        if daily_grouped:
-            filtered = filtered.groupby([self._all_data[self._avg_by],pd.Grouper(key='Start date', freq='1D')]).mean().reset_index()
-
         gb = [self._all_data[self._avg_by]]
         if type == 'months_cycle':
             gb.append(self._all_data['Start date'].dt.month)

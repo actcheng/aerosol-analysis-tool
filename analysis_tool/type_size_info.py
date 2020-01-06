@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import interpolate
 
-from size_utils import cal_bin_centers, map_bin_values 
+from size_utils import cal_bin_centers, map_bin_values, map_modal_values 
 
 class TypeSizeInfo():
     """
@@ -83,7 +83,7 @@ class TypeSizeInfo():
         else:
             print('Inconsistent number of bins! bin_num={}, input_length={}'.format(self._bin_num,len(bin_centers)))
 
-    def gen_varlist(self):
+    def get_varlist(self):
         return [f'{self.get_var_name()}.{i+1}' for i in range(self._bin_num)]
 
     def map_values(self,val_orig,bin_centers_new):

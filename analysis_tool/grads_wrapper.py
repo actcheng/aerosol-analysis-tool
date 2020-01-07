@@ -8,7 +8,7 @@ class GradsWrapper():
         self._ga = Grads(verbose=verbose)
         self._files = []
         self._definitions = {}
-        self._print = True 
+        self._print = False
         self._maxlon = 360
 
         self._ga('set gxout print')
@@ -33,9 +33,13 @@ class GradsWrapper():
         if self._print: print(cmd)
         return self._ga(cmd)
 
-    def ga_exp(self,var):
-        if self._print: print('ga.exp: {}'.format(var))
-        return self._ga.exp(var)
+    def ga_exp(self,var,op=''):
+        if self._print: print('ga.exp: {}'.format(var+op))
+        if op: 
+            self.define('temp',var+op)
+            return self._ga.exp('temp')
+        else:
+            return self._ga.exp(var+op)
 
     # Basic functions
     def open(self,filedir,var):
@@ -95,10 +99,10 @@ class GradsWrapper():
     def aave(self,var,trange=None,x=[0,360],y=[-90,90],op=''):
         pass
 
-    def tloop(self,var,trange=None):
+    def tloop(self,var,trange=None,**kwargs):
         if trange:
             self.time(trange[0],trange[1])
-        return self.ga_exp(self.get_varname(var))
+        return self.ga_exp(self.get_varname(var),**kwargs)
     
     # variable names
     def get_varname(self,var):

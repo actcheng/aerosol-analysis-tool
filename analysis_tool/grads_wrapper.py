@@ -8,7 +8,7 @@ class GradsWrapper():
         self._ga = Grads(verbose=verbose)
         self._files = []
         self._definitions = {}
-        self._print = False
+        self._print = True 
         self._maxlon = 360
 
         self._ga('set gxout print')
@@ -118,7 +118,7 @@ class GradsWrapper():
     def get_single_point(self,var,lat,lon,t=1,trange=None,zrange=None,**kwargs):
         
         self.locate(lat,lon)
-        self.time(t)
+        
         if trange:
             try:
                 if zrange:
@@ -126,12 +126,13 @@ class GradsWrapper():
                     out = ' '.join(self.tave(var,trange,**kwargs)[0][2:-1])
                     return np.array([float(x) for x in out.split()])
                 else:
-                    return float(self.tave(var,trange,**kwargs)[0][1].split()[-1])
+                    return float(self.tave(var,trange,**kwargs)[0][-2].split()[-1])
             except:
                 print('Error in get_single_point')
                 print('Output from Grads:')
                 print(self.tave(var,trange))
         else: # Snapshot
+            self.time(t)
             try:
                 return float(self.display(var,**kwargs)[0][0].split()[-1])
             except:

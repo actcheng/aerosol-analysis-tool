@@ -60,7 +60,7 @@ class PointData(Data):
         """
 
         filtered = filter_time(self._all_data,'Start date',period=period,year=year)
-        
+
         gb = [self._all_data[self._avg_by]]
         if type == 'months_cycle':
             gb.append(self._all_data['Start date'].dt.month)
@@ -112,7 +112,7 @@ class PointData(Data):
         ax.coastlines()
 
         plt.scatter(avg['Longitude'],avg['Latitude'],
-                s=60, edgecolor='k',c=av[val_column], cmap=cmap,
+                s=60, edgecolor='k',c=avg[val_column], cmap=cmap,
                 transform=ccrs.PlateCarree()
                 )
         plt.colorbar(extend='both')

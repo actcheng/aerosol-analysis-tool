@@ -59,26 +59,24 @@ def get_freq(data,**kwargs):
     data = hist[0]/sum(hist[0])
     return data
 
-def ax_set(ax,            
+def ax_set(ax, 
             legend=True,
-            xlim=None,ylim=None,
-            xlog=False,ylog=False,
+            save_suffix='',          
             savedir='',
             savename=None, **kwargs):
     
-    attrs = ['title','xlim','ylim','xscale','yscale']
+    attrs = ['title','xlim','ylim','xlabel','ylabel','xscale','yscale']
     for attr in attrs:
         if attr in kwargs:
-            print(attr,kwargs[attr])
             getattr(ax,'set_'+attr)(kwargs[attr])
 
-    if legend: ax.legend()
+    if 'legend': ax.legend()
     plt.tight_layout()
 
     if savename: 
-        full = add_suffix(savedir,'/') + add_suffix(savename,'.png')
-        plt.savefig(savedir+savename)
+        full = add_suffix(savedir,'/') + savename.lower()+'_'+add_suffix(save_suffix.lower().replace(' ','_'),'.png')
+        plt.savefig(full)
         print(f'Saved as {full}')
 
 def add_suffix(S,suf):
-    return S + (suf if S[-(len(suf))]!=suf else '')
+    return S + (suf if S[-(len(suf)):]!=suf else '')

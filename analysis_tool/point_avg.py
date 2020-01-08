@@ -1,4 +1,4 @@
-from analysis_utils import ax_selector
+from analysis_utils import ax_selector, ax_set
 from base_data import Data
 
 import pandas as pd
@@ -19,9 +19,11 @@ avg_info = {'Orig':model_avg['scont_sfc'],
 class PointAvg(Data):
     def __init__(self,avg_info=None,site_info=None):
         Data.__init__(self)
-        self._avg_info = avg_info 
-        self._avg_data = site_info.join(pd.DataFrame([avg_info[key].rename(key) for key in avg_info]).T) 
-
+        try:
+            self._avg_info = avg_info 
+            self._avg_data = site_info.join(pd.DataFrame([avg_info[key].rename(key) for key in avg_info]).T) 
+        except:
+            print("Created empty PointAvg Object")
     def get_avg_data(self):
         return self._avg_data
 
@@ -31,7 +33,7 @@ class PointAvg(Data):
     def get_sites(self):
         return list(self._avg_data.index.get_level_values('Site name').unique())
 
-    def plot_scatter(self,model_labels,obs_labels,xlim=[0,1.2],ylim=[0,0.2],model_err=None,obs_err=None,savename=None):
+    def plot_scatter(self,model_labels,obs_labels,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],**kwargs):
         corr = self._avg_data [model_labels+obs_labels].corr()
         ncols=len(model_labels)
         nrows=len(obs_labels)
@@ -42,22 +44,26 @@ class PointAvg(Data):
                 self._avg_data.plot.scatter(obs_labels[i],model_labels[j],ax=ax)
                 if model_err or obs_err:
                     plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none")
-                ax.set_xlim(xlim)
-                ax.set_ylim(ylim)
+
                 rtop = max(xlim[1],ylim[1])
                 ax.plot([0,rtop],[0,rtop],'k')
-                ax.set_title('Corr={0:.2f}'.format(corr.at[obs_labels[i],model_labels[j]]))
-                plt.tight_layout()
 
-        if savename: plt.savefig(savename)
+                ax_settings = {
+                    'title': 'Corr={0:.2f}'.format(corr.at[obs_labels[i],model_labels[j]]),
+                       'save_suffix':f'{obs_labels[i].lower()}_{model_labels[j].lower().replace(" ","_")}',
+                       'xlim':xlim,
+                       'ylim':ylim}
+                ax_set(ax,**ax_settings,**kwargs)
+        
 
-    def plot_site_months(self,site,cases,ax=None,ylim=[10,10000],errs=None,figsize=(5,5)):
+    def plot_site_months(self,site,cases,ax=None,ylim=[10,10000],errs=None,figsize=(5,5),**kwargs):
         """ 
         Plot monthly values at specified site for different cases (obs, model)
           - site: site name
           - cases: dict with key=column name, value=plot style
           - errs: dict with key=data column, value=std column
         """
+
         site_df = self.filter_site(site)
         time = site_df['Start date']
         if not ax:
@@ -67,11 +73,12 @@ class PointAvg(Data):
         if errs:
             for key in errs:
                 plt.errorbar('Start date',key,yerr=errs[key],data=site_df,fmt="none",label=None)    
-        ax.set_ylim(ylim)
-        ax.set_xlabel('Months')
-        plt.legend()
-        plt.title(site,fontsize=14)
-        
+
+        ax_settings = {'ylim': ylim,
+                       'xlabel': 'Months',
+                       'title': site,
+                       'save_suffix':site}
+        ax_set(ax,**ax_settings,**kwargs)
         return 
 
     def plot_all_sites(self,*args,**kwargs):

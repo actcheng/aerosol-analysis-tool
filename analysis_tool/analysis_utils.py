@@ -1,4 +1,6 @@
 import datetime
+import numpy as np
+import matplotlib.pyplot as plt 
 
 def draw_progress_bar(percent, bar_len = 50):
     import sys
@@ -51,3 +53,32 @@ def ax_selector(axes,irow,icol,nrows,ncols):
         return axes[irow] if nrows>1 else axes
     else:
         return axes[irow,icol]
+
+def get_freq(data,**kwargs):
+    hist = np.histogram(data,**kwargs)
+    data = hist[0]/sum(hist[0])
+    return data
+
+def ax_set(ax,            
+            legend=True,
+            xlim=None,ylim=None,
+            xlog=False,ylog=False,
+            savedir='',
+            savename=None, **kwargs):
+    
+    attrs = ['title','xlim','ylim','xscale','yscale']
+    for attr in attrs:
+        if attr in kwargs:
+            print(attr,kwargs[attr])
+            getattr(ax,'set_'+attr)(kwargs[attr])
+
+    if legend: ax.legend()
+    plt.tight_layout()
+
+    if savename: 
+        full = add_suffix(savedir,'/') + add_suffix(savename,'.png')
+        plt.savefig(savedir+savename)
+        print(f'Saved as {full}')
+
+def add_suffix(S,suf):
+    return S + (suf if S[-(len(suf))]!=suf else '')

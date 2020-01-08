@@ -62,15 +62,17 @@ class PointData(Data):
         filtered = filter_time(self._all_data,'Start date',period=period,year=year)
 
         gb = [self._all_data[self._avg_by]]
-        if type == 'months_cycle':
-            gb.append(self._all_data['Start date'].dt.month)
-        elif type == 'months':
+        if type == 'months' or type == 'months_cycle':
             gb.append(pd.Grouper(key='Start date', freq='1M'))
         elif type == 'years' or type == 'years_all':
             gb.append(self._all_data['Start date'].dt.year)
 
-        if type == 'years_all':
-            df = filtered.groupby(gb).mean().reset_index().drop(['Start date'],axis=1).groupby(by=self._avg_by).agg(agg)
+        if type == 'years_all' or type == 'months_cycle':
+            df = filtered.groupby(gb).mean().reset_index()
+            if type == 'years_all':
+                df = df.drop(['Start date'],axis=1).groupby(by=self._avg_by).agg(agg)
+            else:
+                df = df.groupby([df[self._avg_by],df['Start date'].dt.month]).agg(agg) 
         else:
             df = filtered.groupby(gb).agg(agg)
 

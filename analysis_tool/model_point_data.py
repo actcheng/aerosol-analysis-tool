@@ -16,36 +16,49 @@ class ModelPointData(PointData):
     def get_avg_data(self):
         return self._avg_data
 
-    def read_grads_all(self,grads_dir,grads_names,start_date,time_range=[1,1],deltaseconds=60*60*24,**kwargs):
+    def read_grads_all(self,grads_dir,grads_names,start_date,time_ranges=[1,1],check='check',deltaseconds=60*60*24,**kwargs):
         if type(grads_names) != list: grads_names = [grads_names]
-        date_len = time_range[1]-time_range[0]+1
-        date_list = [0]*date_len
-
-        date_list[0] = start_date
-        for i in range(1,date_len):
-            date_list[i] = date_list[i-1] + datetime.timedelta(seconds=deltaseconds)
+        if type(time_ranges[0]) != list: time_ranges = [time_ranges]
+        
+        # Create date lists
+        this_date = start_date
+        date_lists = []
+        for time_range in time_ranges:
+            date_len = time_range[1]-time_range[0] +1
+            date_list = [0]*date_len
+            date_list[0] = this_date
+            for i in range(1,date_len):
+                date_list[i] = date_list[i-1] + datetime.timedelta(seconds=deltaseconds)
+            date_lists.append(date_list)
+            this_date = date_list[-1] + datetime.timedelta(seconds=deltaseconds) 
         
         ga = GradsWrapper()
-        all_data = pd.DataFrame()
+        all_data = pd.DataFrame()        
         for grads_name in grads_names:
-            ga.open(grads_dir,grads_name)
             df = pd.DataFrame()
-            for site in self._site_info.index[:8]:
-                lat,lon = self._site_info.loc[site,'Latitude'],self._site_info.loc[site,'Longitude']
-                try:
-                    ga.locate(lat,lon)
-                    out = ga.tloop(grads_name,time_range,**kwargs)
-                    df_site = pd.DataFrame([[site]*date_len,date_list,out],
-                                    index=['Site name','Start date',grads_name]).T
-                    
-                    df = pd.concat([df,df_site],ignore_index=True,sort=False)
-                except:
-                    print(f'Error in getting data at {site} (lat: {lat}, lon:{lon})')
+            for i in range(len(time_ranges)):
+                time_range,date_list = time_ranges[i],date_lists[i]
+                if len(time_ranges) > 1:
+                    ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
+                else:
+                    ga.open(f'{grads_dir}/{check}',grads_name)          
+                for site in self._site_info.index[:]:
+                    lat,lon = self._site_info.loc[site,'Latitude'],self._site_info.loc[site,'Longitude']
+                    try:
+                        ga.locate(lat,lon)
+                        out = ga.tloop(grads_name,time_range,**kwargs)
+                        df_site = pd.DataFrame([[site]*date_len,date_list,out],
+                                        index=['Site name','Start date',grads_name]).T
+                        
+                        df = pd.concat([df,df_site],ignore_index=True,sort=False)
+                    except:
+                        print(f'Error in getting data at {site} (lat: {lat}, lon:{lon})')
+                ga.close()
+            df[grads_name] = df[grads_name].astype(float)
             if len(all_data):
-                all_data = all_data.merge(df,on=['Site name','Start date'],how='outer')
+                    all_data = all_data.merge(df,on=['Site name','Start date'],how='outer')
             else:
                 all_data = df
-            ga.close()
         self._all_data = all_data
         return 
 

@@ -54,13 +54,13 @@ class PointHist(Data):
         self._style[key][param] = value
 
 
-    def plot_frequency(self,param,bins,xscale='log',save_prefix=None,**kwargs): 
+    def plot_frequency(self,param,bins,xscale='log',ylabel='Relative frequency',**kwargs): 
         """ Plot histogram based on the given parameter as passed in the info"""
         axes = []
-        ax_settings = {'xscale': xscale }
+        ax_settings = {'xscale': xscale, 'ylabel':ylabel }
 
         centers = [(bins[i]+bins[i+1])*0.5 for i in range(len(bins)-1)]
-        for i, groupname in enumerate(self._groupnames[:1]):
+        for i, groupname in enumerate(self._groupnames):
             fig,ax = plt.subplots()    
             for key in self._keys:
                 data = self._groupbys[key].get_group(groupname)[self._info[key][param]]
@@ -68,7 +68,8 @@ class PointHist(Data):
                 ax.plot(centers,get_freq(data,bins=bins),**self._styles[key],label=key)
 
             ax_settings['title'] = groupname
-            if save_prefix: ax_settings['savename'] = f'{save_prefix}_{groupname.lower()}'
+            ax_settings['save_suffix'] = groupname
+
             ax_set(ax,**ax_settings,**kwargs)
             
             axes.append(ax)

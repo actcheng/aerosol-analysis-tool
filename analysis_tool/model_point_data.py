@@ -16,22 +16,28 @@ class ModelPointData(PointData):
     def get_avg_data(self):
         return self._avg_data
 
-    def read_grads_all(self,grads_dir,grads_names,start_date,time_ranges=[1,1],check='check',deltaseconds=60*60*24,**kwargs):
+    def read_grads_all(self,grads_dir,grads_names,start_dates,
+                       time_ranges=[1,1],file_suffixes=None,
+                       check='check',deltaseconds=60*60*24,**kwargs):
         if type(grads_names) != list: grads_names = [grads_names]
         if type(time_ranges[0]) != list: time_ranges = [time_ranges]
-        
+        if type(start_dates) != list: start_dates = [start_dates] 
+
         # Create date lists
-        this_date = start_date
+        this_date = start_dates[0]
         date_lists = []
-        for time_range in time_ranges:
+        for i, time_range in enumerate(time_ranges):
             date_len = time_range[1]-time_range[0] +1
             date_list = [0]*date_len
             date_list[0] = this_date
-            for i in range(1,date_len):
-                date_list[i] = date_list[i-1] + datetime.timedelta(seconds=deltaseconds)
+            for j in range(1,date_len):
+                date_list[j] = date_list[j-1] + datetime.timedelta(seconds=deltaseconds)
             date_lists.append(date_list)
-            this_date = date_list[-1] + datetime.timedelta(seconds=deltaseconds) 
-        
+            if len(start_dates) > i+1:                
+                this_date = start_dates[i+1]
+            else:
+                this_date = date_list[-1] + datetime.timedelta(seconds=deltaseconds) 
+            
         ga = GradsWrapper()
         all_data = pd.DataFrame()        
         for grads_name in grads_names:
@@ -39,7 +45,10 @@ class ModelPointData(PointData):
             for i in range(len(time_ranges)):
                 time_range,date_list = time_ranges[i],date_lists[i]
                 if len(time_ranges) > 1:
-                    ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
+                    if file_suffixes:
+                        ga.open(f'{grads_dir}_{file_suffixes[i]}/{check}',grads_name)
+                    else:
+                        ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
                 else:
                     ga.open(f'{grads_dir}/{check}',grads_name)          
                 for site in self._site_info.index[:]:
@@ -62,7 +71,9 @@ class ModelPointData(PointData):
         self._all_data = all_data
         return 
 
-    def get_grads_avg(self,grads_dir,grads_names,time_ranges=[1,1],zrange=None,check='check',**kwargs):
+    def get_grads_avg(self,grads_dir,grads_names,
+                      time_ranges=[1,1],file_suffixes=None,
+                      zrange=None,check='check',**kwargs):
 
         if type(time_ranges[0]) != list: time_ranges = [time_ranges]
         ttotal = sum(t[1]-t[0]+1 for t in time_ranges)
@@ -76,9 +87,12 @@ class ModelPointData(PointData):
             for i in range(len(time_ranges)):
                 trange = time_ranges[i]
                 if len(time_ranges) > 1:
-                    ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
+                    if file_suffixes:
+                        ga.open(f'{grads_dir}_{file_suffixes[i]}/{check}',grads_name)
+                    else:
+                        ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
                 else:
-                    ga.open(f'{grads_dir}/{check}',grads_name)
+                    ga.open(f'{grads_dir}/{check}',grads_name)  
                 for site in self._site_info.index[:]:
                     lat,lon = self._site_info.loc[site,'Latitude'],self._site_info.loc[site,'Longitude']
                     value = ga.get_single_point(grads_name,lat,lon,trange=trange,zrange=zrange,**kwargs) *(trange[1]-trange[0]+1)/ttotal

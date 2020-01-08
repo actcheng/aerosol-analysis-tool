@@ -19,9 +19,8 @@ avg_info = {'Orig':model_avg['scont_sfc'],
 class PointAvg(Data):
     def __init__(self,avg_info=None,site_info=None):
         Data.__init__(self)
-        if avg_info and site_info:
-            self._avg_info = avg_info 
-            self._avg_data = site_info.join(pd.DataFrame([avg_info[key].rename(key) for key in avg_info]).T) 
+        self._avg_info = avg_info 
+        self._avg_data = site_info.join(pd.DataFrame([avg_info[key].rename(key) for key in avg_info]).T) 
 
     def get_avg_data(self):
         return self._avg_data

@@ -28,12 +28,14 @@ class TypeSizeInfo():
                 modal_sigma = 2.0,
                 bin_num = 10, 
                 bin_range = [3e-9, 10e-5],
-                var_type='dns'):
+                var_type='dvt',
+                density=1.0):
 
         self._aerosol_name = aerosol_name
         self._var_prefix   = var_prefix
         self._var_type     = var_type
         self._size_type    = size_type.lower()
+        self._density      = density
 
         if self._size_type == 'modal':
             self._modal_diam = modal_diam
@@ -63,6 +65,9 @@ class TypeSizeInfo():
 
     def get_size_type(self):
         return self._size_type
+
+    def get_density(self):
+        return self._density
 
     def get_modal_diam(self):
         return self._modal_diam if self._size_type=='modal' else None

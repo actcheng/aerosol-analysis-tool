@@ -9,6 +9,7 @@ import size_utils
 
 from improve_data import ImproveData
 from nas_data import NasData
+from aeronet_data import AeronetData
 from model_point_data import ModelPointData
 
 # Size
@@ -18,3 +19,4 @@ from model_point_size_data import ModelPointSizeData
 # Compare model and obs
 from point_avg import PointAvg
 from point_hist import PointHist
+from point_size_dist import PointSizeDist

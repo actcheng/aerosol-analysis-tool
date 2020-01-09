@@ -33,27 +33,31 @@ class PointAvg(Data):
     def get_sites(self):
         return list(self._avg_data.index.get_level_values('Site name').unique())
 
-    def plot_scatter(self,model_labels,obs_labels,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],**kwargs):
+    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],title='',color='b',**kwargs):
         corr = self._avg_data [model_labels+obs_labels].corr()
         ncols=len(model_labels)
         nrows=len(obs_labels)
-        fig, axes = plt.subplots(ncols=ncols,nrows=nrows,figsize=(ncols*4.5,nrows*4))
+        if not axes: 
+            fig, axes = plt.subplots(ncols=ncols,nrows=nrows,figsize=(ncols*4.5,nrows*4))
+        
         for i in range(nrows):
             for j in range(ncols):
                 ax = ax_selector(axes,i,j,nrows,ncols)
-                self._avg_data.plot.scatter(obs_labels[i],model_labels[j],ax=ax)
+                self._avg_data.plot.scatter(obs_labels[i],model_labels[j],ax=ax,c=color)
                 if model_err or obs_err:
-                    plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none")
+                    plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none",color=color)
 
                 rtop = max(xlim[1],ylim[1])
                 ax.plot([0,rtop],[0,rtop],'k')
-
+                corr_res = 'Corr={0:.2f}'.format(corr.at[obs_labels[i],model_labels[j]])
+                print(model_labels, ' : ', corr_res)
                 ax_settings = {
-                    'title': 'Corr={0:.2f}'.format(corr.at[obs_labels[i],model_labels[j]]),
+                       'title': title or corr_res,
                        'save_suffix':f'{obs_labels[i].lower()}_{model_labels[j].lower().replace(" ","_")}',
                        'xlim':xlim,
                        'ylim':ylim}
                 ax_set(ax,**ax_settings,**kwargs)
+        return axes
         
 
     def plot_site_months(self,site,cases,ax=None,ylim=[10,10000],errs=None,figsize=(5,5),**kwargs):

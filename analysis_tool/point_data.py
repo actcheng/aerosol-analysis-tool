@@ -27,7 +27,7 @@ class PointData(Data):
     def set_all_data(self,df):
         self._all_data = df
 
-    def set_site_info(self,df,columns=['Latitude', 'Longitude','Altitude']):
+    def set_site_info(self,df,columns=['Latitude', 'Longitude']):
         self._site_info = df[columns]
         return
 
@@ -78,7 +78,7 @@ class PointData(Data):
 
         return self.avg_merger(df,site_info_columns)
 
-    def avg_merger(self,df,site_info_columns=['Latitude', 'Longitude','Altitude']):
+    def avg_merger(self,df,site_info_columns=['Latitude', 'Longitude']):
         """Merge site information to average data"""
         return  df if not site_info_columns else df.merge(self._site_info[site_info_columns],left_index=True,right_index=True)
 

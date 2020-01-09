@@ -1,5 +1,5 @@
 from analysis_utils import ax_selector,get_freq, ax_set
-from base_data import Data
+from group_data import GroupData
 
 import pandas as pd
 import numpy as np
@@ -21,38 +21,9 @@ info = {'GAW':{'data': gaw, (PointData)
           
 '''''
 
-class PointHist(Data):
+class PointHist(GroupData):
     def __init__(self,info=None,**kwargs):
-        Data.__init__(self)
-        if info: self.set_info(info,**kwargs)
-            
-
-    def set_info(self,info,by='Site name'):
-        self._info = info
-        self._keys = list(info.keys())
-        self._groupbys = {key:info[key]['data'].get_all_data().groupby(by)
-                            for key in self._keys}
-        self._groupnames = list(self._groupbys[self._keys[0]].groups.keys())
-        self._styles = {key:info[key]['style'] for key in self._keys}
-
-    def get_info(self):
-        return self._info
-
-    def get_keys(self):
-        return self._keys
-    
-    def get_groupbys(self):
-        return self._groupbys
-
-    def get_groupnames(self):
-        return self._groupnames
-
-    def get_styles(self):
-        return self._styles
-
-    def set_styles(self,key,param,value):
-        self._style[key][param] = value
-
+        GroupData.__init__(self)
 
     def plot_frequency(self,param,bins,xscale='log',ylabel='Relative frequency',**kwargs): 
         """ Plot histogram based on the given parameter as passed in the info"""

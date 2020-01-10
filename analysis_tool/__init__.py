@@ -10,6 +10,7 @@ import size_utils
 from improve_data import ImproveData
 from nas_data import NasData
 from aeronet_data import AeronetData
+from eusaar_data import EusaarData
 from model_point_data import ModelPointData
 
 # Size

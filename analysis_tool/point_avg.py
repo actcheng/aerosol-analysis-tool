@@ -24,6 +24,7 @@ class PointAvg(Data):
             self._avg_data = site_info.join(pd.DataFrame([avg_info[key].rename(key) for key in avg_info]).T) 
         except:
             print("Created empty PointAvg Object")
+
     def get_avg_data(self):
         return self._avg_data
 
@@ -33,17 +34,17 @@ class PointAvg(Data):
     def get_sites(self):
         return list(self._avg_data.index.get_level_values('Site name').unique())
 
-    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],title='',color='b',**kwargs):
-        corr = self._avg_data [model_labels+obs_labels].corr()
+    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],title='',color='b',label=None,**kwargs):
+        corr = self._avg_data[model_labels+obs_labels].corr()
         ncols=len(model_labels)
         nrows=len(obs_labels)
         if not axes: 
-            fig, axes = plt.subplots(ncols=ncols,nrows=nrows,figsize=(ncols*4.5,nrows*4))
+            fig, axes = plt.subplots(ncols=ncols,nrows=nrows,figsize=(ncols*4.2,nrows*4))
         
         for i in range(nrows):
             for j in range(ncols):
                 ax = ax_selector(axes,i,j,nrows,ncols)
-                self._avg_data.plot.scatter(obs_labels[i],model_labels[j],ax=ax,c=color)
+                self._avg_data.plot.scatter(obs_labels[i],model_labels[j],ax=ax,c=color,label=label)
                 if model_err or obs_err:
                     plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none",color=color)
 

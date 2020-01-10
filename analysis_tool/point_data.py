@@ -34,7 +34,7 @@ class PointData(Data):
 
     def site_avg(self, type='all',agg=['mean','count'],
                 period=None, year=None,                
-                site_info_columns=['Latitude', 'Longitude','Altitude']):
+                site_info_columns=['Latitude','Longitude']):
 
         """ 
             Function to calculate site averages from data
@@ -66,7 +66,7 @@ class PointData(Data):
             gb.append(pd.Grouper(key='Start date', freq='1M'))
         elif type == 'years' or type == 'years_all':
             gb.append(self._all_data['Start date'].dt.year)
-
+   
         if type == 'years_all' or type == 'months_cycle':
             df = filtered.groupby(gb).mean().reset_index()
             if type == 'years_all':
@@ -79,7 +79,6 @@ class PointData(Data):
         return self.avg_merger(df,site_info_columns)
 
     def avg_merger(self,df,site_info_columns=['Latitude', 'Longitude']):
-        """Merge site information to average data"""
         return  df if not site_info_columns else df.merge(self._site_info[site_info_columns],left_index=True,right_index=True)
 
     def plot_data_range(self,varlist,figsize=(8,10)):

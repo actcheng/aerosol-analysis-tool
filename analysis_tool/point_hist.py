@@ -23,7 +23,7 @@ info = {'GAW':{'data': gaw, (PointData)
 
 class PointHist(GroupData):
     def __init__(self,info=None,**kwargs):
-        GroupData.__init__(self)
+        GroupData.__init__(self,info)
 
     def plot_frequency(self,param,bins,xscale='log',ylabel='Relative frequency',**kwargs): 
         """ Plot histogram based on the given parameter as passed in the info"""
@@ -34,10 +34,12 @@ class PointHist(GroupData):
         for i, groupname in enumerate(self._groupnames):
             fig,ax = plt.subplots()    
             for key in self._keys:
-                data = self._groupbys[key].get_group(groupname)[self._info[key][param]]
+                try:
+                    data = self._groupbys[key].get_group(groupname)[self._info[key][param]]
 
-                ax.plot(centers,get_freq(data,bins=bins),**self._styles[key],label=key)
-
+                    ax.plot(centers,get_freq(data,bins=bins),**self._styles[key],label=key)
+                except:
+                    print(f'Not plotted for {key} at {groupname}')
             ax_settings['title'] = groupname
             ax_settings['save_suffix'] = groupname
 

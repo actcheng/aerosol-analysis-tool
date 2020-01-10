@@ -3,7 +3,8 @@ from base_data import Data
 class GroupData(Data):
     def __init__(self,info=None,**kwargs):
         Data.__init__(self)
-        if info: self.set_info(info,**kwargs)
+        if info != None: 
+            self.set_info(info,**kwargs)
 
     def set_info(self,info,by='Site name'):
         self._info = info

@@ -6,6 +6,8 @@
     # Text and files
     - add_suffix
     - get_filelist
+    - get_filelist_from_dir
+    - get_sites_from_filenames
 
     # Date and time
     - day_to_date
@@ -19,7 +21,11 @@
     - lon180
     
     # Plotting
+    - ax_selector
+    - ax_set
+
     # Output tool
+    - draw_progress_bar
 """
 
 
@@ -28,14 +34,36 @@
 def add_suffix(S,suf):
     return S + (suf if S[-(len(suf)):]!=suf else '')
 
-def get_filelist(self,filedir,keywords):
-    pass
+def get_keyword(string,keywords):
+    for keyword in keywords:
+        if keyword in string: return keyword
+        
+def get_filelist(all_files,optional=[],required=[]):
+    """ Return a list of filenames with the required keyword and one of the optional keywords"""
+    return sorted([file 
+            for file in all_files 
+            if (not required or all([req in file for req in required])) and 
+               (not optional or any([opt in file for opt in optional]))])
+
+def get_filelist_from_dir(filedir,**kwargs):
+    """ Return a list of filenames in file directory"""
+    import os
+
+    return get_filelist(os.listdir(filedir),**kwargs)
+
+def get_sites_from_filenames(filelist,delimiter='_',loc=0):
+    return set([filename.split(delimiter)[loc] for filename in filelist])
 
 ## Date and time
 def day_to_date(start_date,days):
     import datetime
 
     return start_date + datetime.timedelta(float(days))
+
+def hours_to_datelist(start_date,length):
+    import datetime
+
+    return [start_date + datetime.timedelta(hours=i) for i in range(1,length+1)]
 
 def filter_time(df,col='',period=[],year=None,month=None):
     import datetime
@@ -96,12 +124,12 @@ def ax_set(ax,
         if attr in kwargs:
             getattr(ax,'set_'+attr)(kwargs[attr])
 
-    if 'legend': ax.legend()
+    if legend==True: ax.legend()
     plt.tight_layout()
 
     if savename: 
         full = add_suffix(savedir,'/') + savename.lower()+'_'+add_suffix(save_suffix.lower().replace(' ','_'),'.png')
-        plt.savefig(full)
+        plt.savefig(full,dpi=200)
         print(f'Saved as {full}')
 
 ## Output tool

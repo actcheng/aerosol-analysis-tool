@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import datetime 
 import os
-
+import sys
 
 class ModelPointData(PointData):
     def __init__(self):
@@ -103,8 +103,11 @@ class ModelPointData(PointData):
                             name = f'{grads_name}.{j+1}'
                             df_avg.at[site,name] = value[j] + (df_avg.at[site,name] if i>0 else 0)
                     processed+=1
-                    if show_progress: draw_progress_bar(processed/data_num)
-
+                    if show_progress: 
+                        draw_progress_bar(processed/data_num)
+                    else:
+                        print(f'Finished reading {processed}/{data_num}')
+                        sys.stdout.flush()
                 ga.close()
 
         self._avg_data = df_avg 

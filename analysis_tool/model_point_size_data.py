@@ -10,11 +10,11 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
 
     """
     def __init__(self, type_info_list=None, 
-                 bin_num = 10, bin_range = [3e-9, 10e-5]):
+                 bin_num = 10, bin_range = [3e-9, 10e-5],**kwargs):
 
         ModelPointData.__init__(self)
         TypeSizeInfo.__init__(self,'Total','tt','bin',
-                              bin_num=bin_num,bin_range=bin_range)
+                              bin_num=bin_num,bin_range=bin_range,**kwargs)
 
         self._type_info = type_info_list and {t.get_aerosol_name(): t for t in type_info_list} 
 
@@ -26,6 +26,7 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
 
     def get_grads_avg_from_info(self,grads_dir,cal_total=True,
                                  mass_to_volume=False,
+                                 to_dlogr=False,
                                  *args, **kwargs):
 
         df_avg = self._site_info.copy()
@@ -38,6 +39,9 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
                 dlnr = np.log(t.get_bin_centers()[1]/2)-np.log(t.get_bin_centers()[0]/2)
                 dens = t.get_density()
                 avg = avg*1.0E6/dens/dlnr
+            elif to_dlogr:
+                dlogr = np.log10(t.get_bin_centers()[1]/2)-np.log10(t.get_bin_centers()[0]/2) 
+                avg = avg/dlogr
             df_avg = df_avg.merge(avg[t.get_varlist()],left_index=True,right_index=True)
 
         self._avg_data = df_avg

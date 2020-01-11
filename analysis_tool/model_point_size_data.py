@@ -26,6 +26,7 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
 
     def get_grads_avg_from_info(self,grads_dir,cal_total=True,
                                  mass_to_volume=False,
+                                 cal_centers_from_num=False,
                                  to_dlogr=False,
                                  *args, **kwargs):
 
@@ -35,19 +36,37 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
             t = self._type_info[key]
             print(f'\nRead {t.get_aerosol_name()} data')
             avg = self.get_grads_avg(grads_dir,[t.get_var_name()],*args,zrange=[1,t.get_bin_num()],**kwargs)
+            
+            if cal_centers_from_num:
+                avg_num = self.get_grads_avg(grads_dir,[t.get_var_num_name()],*args,zrange=[1,t.get_bin_num()],**kwargs)
+                dens = t.get_density() # Should not be considered in new output
+                centers = (avg.values[:,2:]/avg_num.values[:,2:]/(dens*np.pi/6))**(1/3)*1e6
+            else:
+                centers = np.array([t.get_bin_centers()]*len(avg))
+            
+            
+            avg_centers = pd.DataFrame(np.array(centers),columns=t.get_centerlist(),index=avg.index)    
+
             if mass_to_volume:
                 dlnr = np.log(t.get_bin_centers()[1]/2)-np.log(t.get_bin_centers()[0]/2)
-                dens = t.get_density()
+                dens = t.get_density() # Should not be considered in new output
                 avg = avg*1.0E6/dens/dlnr
             elif to_dlogr:
                 dlogr = np.log10(t.get_bin_centers()[1]/2)-np.log10(t.get_bin_centers()[0]/2) 
                 avg = avg/dlogr
-            df_avg = df_avg.merge(avg[t.get_varlist()],left_index=True,right_index=True)
+
+            site_df = (avg[t.get_varlist()].merge(avg_centers,left_index=True,right_index=True) 
+                        if cal_centers_from_num 
+                        else avg[t.get_varlist()] )
+            df_avg = df_avg.merge(site_df,left_index=True,right_index=True)
+                
 
         self._avg_data = df_avg
+
         if cal_total:
             df_avg = self.get_total_size_dist()
             self._avg_data = df_avg
+
         return df_avg
 
     def get_total_size_dist(self): 
@@ -55,7 +74,10 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
             total =  np.zeros((self._bin_num,))
             for key in self._type_info:
                 t = self._type_info[key]
-                mapped = self.map_values(list(row[t.get_varlist()].values),t.get_bin_centers())
+                if t.get_centerlist()[0] in row.index:
+                    mapped = self.map_values(list(row[t.get_varlist()].values),list(row[t.get_centerlist()].values))
+                else:
+                    mapped = self.map_values(list(row[t.get_varlist()].values),t.get_bin_centers()) 
                 total += mapped
             return total
         

@@ -23,20 +23,30 @@ info = {'AERONET':{'data': gaw, (PointData)
 
 class PointSizeDist(GroupData):
     def __init__(self,info=None,**kwargs):
-        GroupData.__init__(self,info=info)
+        GroupData.__init__(self,info=info,**kwargs)
         
     def set_info(self,info,by='Site name'):
         super().set_info(info,by)
-        self._bin_centers = {key:self._info[key]['data'].get_bin_centers() 
-                                 if 'total' in self._info[key] and self._info[key]['total']
-                                 else self._info[key]['data'].get_type_info()[key].get_bin_centers()
-                                 for key in self._keys 
-                                 }
-        self._bin_num = {key:self._info[key]['data'].get_bin_num()
-                            if 'total' in self._info[key] and self._info[key]['total']
-                            else self._info[key]['data'].get_type_info()[key].get_bin_num()
-                            for key in self._keys} 
+        # self._bin_centers = {key: self.pick_bin_centers(key)                                
+        #                          for key in self._keys 
+        #                          }
+        self._bin_num = {key: self.pick_bin_num(key) for key in self._keys} 
         self._size_col = {key: ['{}.{}'.format(self._info[key]['prefix'],i+1) for i in range(self._bin_num[key])] for key in self._keys}
+
+    def pick_bin_centers(self,key,group=None):
+        if ('centers' not in self._info[key]) or (self._info[key]['centers'] == 'default'):
+            return self._info[key]['data'].get_bin_centers()  
+        elif self._info[key]['centers'] == 'fixed':
+            return self._info[key]['data'].get_type_info()[key].get_bin_centers() 
+        else:
+            columns=self._info[key]['data'].get_type_info()[key].get_centerlist()
+            return list(group.mean()[columns])
+
+    def pick_bin_num(self,key):
+        if ('centers' not in self._info[key]) or (self._info[key]['centers'] == 'default'):
+            return self._info[key]['data'].get_bin_num() 
+        else: 
+            return self._info[key]['data'].get_type_info()[key].get_bin_num()
 
     def get_bin_centers(self):
         return self._bin_centers
@@ -47,6 +57,7 @@ class PointSizeDist(GroupData):
                     xlabel='Diameter (${\mu}$m)',
                     ylabel='dV/dlnr',
                     count_key='',
+                    close=False,
                     **kwargs):
 
         if len(sites)==0: sites = self._groupnames
@@ -56,8 +67,13 @@ class PointSizeDist(GroupData):
             counts = 0
             fig,ax = plt.subplots()
             for key in self._keys:
-                centers = self._bin_centers[key]
+                
                 group = self._groupbys[key].get_group(site).dropna(how='all')
+                centers = self.pick_bin_centers(key,group)
+                # (self._bin_centers[key] 
+                #             if self._info[key]['centers'] == 'fixed'
+                #             else list(group.mean()[self._bin_centers[key]]))
+
                 if key == count_key: 
                     counts = len(group)
                 data =  list(group.mean()[self._size_col[key]])
@@ -66,7 +82,7 @@ class PointSizeDist(GroupData):
             ax_settings['title'] = f'{site}: (N={counts})' if counts>0 else site
             ax_settings['save_suffix'] = site
             ax_set(ax,**ax_settings,**kwargs)
-            plt.close()
+            if close: plt.close()
 
 
 

@@ -29,11 +29,13 @@ class TypeSizeInfo():
                 bin_num = 10, 
                 bin_range = [3e-9, 10e-5],
                 var_type='dvt',
+                var_num='dnt', # For calculating bin_centers
                 density=1.0):
 
         self._aerosol_name = aerosol_name
         self._var_prefix   = var_prefix
         self._var_type     = var_type
+        self._var_num      = var_num
         self._size_type    = size_type.lower()
         self._density      = density
 
@@ -54,6 +56,9 @@ class TypeSizeInfo():
     
     def get_var_type(self):
         return self._var_type
+
+    def get_var_num(self):
+        return self._var_num
     
     def set_var_type(self,var_type):
         self._var_type = var_type
@@ -61,6 +66,9 @@ class TypeSizeInfo():
 
     def get_var_name(self):
         return self._var_prefix + self._var_type
+
+    def get_var_num_name(self):
+        return self._var_prefix + self._var_num
 
     def get_size_type(self):
         return self._size_type
@@ -98,10 +106,14 @@ class TypeSizeInfo():
 
     def set_varlist(self):
         self._varlist =  [f'{self.get_var_name()}.{i+1}' for i in range(self._bin_num)]
+        self._centerlist = [f'{self.get_var_name()}.c.{i+1}' for i in range(self._bin_num)] 
+
+    def get_centerlist(self):
+        return self._centerlist    
 
     def map_values(self,val_orig,bin_centers_orig,model_diam_orig=None,model_sigma_orig=None):
         if not model_diam_orig:
             return map_bin_values(val_orig,bin_centers_orig,self._bin_centers)
-        else:
-            return map_modal_values(val_orig,modal_diam_orig,modal_sigma_orig,self._bin_centers)
+        # else:
+        #     return map_modal_values(val_orig,modal_diam_orig,modal_sigma_orig,self._bin_centers)
 

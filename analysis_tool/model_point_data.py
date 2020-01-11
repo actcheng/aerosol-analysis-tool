@@ -73,7 +73,7 @@ class ModelPointData(PointData):
 
     def get_grads_avg(self,grads_dir,grads_names,
                       time_ranges=[1,1],file_suffixes=None,
-                      zrange=None,check='check',**kwargs):
+                      zrange=None,check='check',show_progress=True,**kwargs):
 
         if type(time_ranges[0]) != list: time_ranges = [time_ranges]
         ttotal = sum(t[1]-t[0]+1 for t in time_ranges)
@@ -103,7 +103,7 @@ class ModelPointData(PointData):
                             name = f'{grads_name}.{j+1}'
                             df_avg.at[site,name] = value[j] + (df_avg.at[site,name] if i>0 else 0)
                     processed+=1
-                    draw_progress_bar(processed/data_num)
+                    if show_progress: draw_progress_bar(processed/data_num)
 
                 ga.close()
 

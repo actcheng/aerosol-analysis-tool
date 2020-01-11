@@ -7,10 +7,13 @@ class GroupData(Data):
             self.set_info(info,**kwargs)
 
     def set_info(self,info,by='Site name'):
+        
         self._info = info
         self._keys = list(info.keys())
         self._groupbys = {key:info[key]['data'].get_all_data().groupby(by)
                             for key in self._keys}
+        # print(info['EUSAAR']['data'].get_all_data().groupby(by).groups.keys()) 
+        # print(info[self._keys[0]]['data'].get_all_data().groupby(by).groups.keys())                   
         self._groupnames = list(self._groupbys[self._keys[0]].groups.keys())
         self._styles = {key:info[key]['style'] for key in self._keys}
 

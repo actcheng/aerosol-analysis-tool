@@ -27,9 +27,6 @@ class PointSizeDist(GroupData):
         
     def set_info(self,info,by='Site name'):
         super().set_info(info,by)
-        # self._bin_centers = {key: self.pick_bin_centers(key)                                
-        #                          for key in self._keys 
-        #                          }
         self._bin_num = {key: self.pick_bin_num(key) for key in self._keys} 
         self._size_col = {key: ['{}.{}'.format(self._info[key]['prefix'],i+1) for i in range(self._bin_num[key])] for key in self._keys}
 
@@ -66,21 +63,19 @@ class PointSizeDist(GroupData):
         for i,site in enumerate(sites):
             counts = 0
             fig,ax = plt.subplots()
+            
             for key in self._keys:
-                
-                group = self._groupbys[key].get_group(site).dropna(how='all')
+                thresh = len(self._groupbys[key].get_group(site).columns) - self._bin_num[key] +1         
+                group = self._groupbys[key].get_group(site).dropna(thresh=thresh)
                 centers = self.pick_bin_centers(key,group)
-                # (self._bin_centers[key] 
-                #             if self._info[key]['centers'] == 'fixed'
-                #             else list(group.mean()[self._bin_centers[key]]))
-
+                
                 if key == count_key: 
                     counts = len(group)
                 data =  list(group.mean()[self._size_col[key]])
                 ax.plot(centers,data,label=key,**self._styles[key])
-
+            
             ax_settings['title'] = f'{site}: (N={counts})' if counts>0 else site
-            ax_settings['save_suffix'] = site
+            ax_settings['save_suffix'] = site            
             ax_set(ax,**ax_settings,**kwargs)
             if close: plt.close()
 

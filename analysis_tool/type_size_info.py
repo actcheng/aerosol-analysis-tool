@@ -40,11 +40,10 @@ class TypeSizeInfo():
         if self._size_type == 'modal':
             self._modal_diam = modal_diam
             self._modal_sigma = modal_sigma
-        else:
-            self._bin_num = bin_num
+        else:            
             self._bin_range = bin_range
             self._bin_centers = cal_bin_centers(bin_num,bin_range)
-            self.set_varlist() 
+            self.set_bin_num(bin_num)
 
     # Access information
     def get_aerosol_name(self):
@@ -78,6 +77,10 @@ class TypeSizeInfo():
     def get_bin_num(self):
         return self._bin_num if self._size_type=='bin' else None
 
+    def set_bin_num(self,bin_num):
+        self._bin_num = bin_num
+        self.set_varlist()
+
     def get_bin_range(self):
         return self._bin_range if self._size_type=='bin' else None
     
@@ -92,6 +95,7 @@ class TypeSizeInfo():
 
     def get_varlist(self):
         return self._varlist
+
     def set_varlist(self):
         self._varlist =  [f'{self.get_var_name()}.{i+1}' for i in range(self._bin_num)]
 

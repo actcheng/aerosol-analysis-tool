@@ -99,9 +99,9 @@ class TypeSizeInfo():
     def set_varlist(self):
         self._varlist =  [f'{self.get_var_name()}.{i+1}' for i in range(self._bin_num)]
 
-    def map_values(self,val_orig,bin_centers_new):
-        if self._size_type == 'bin':
-            return map_bin_values(val_orig,self._bin_centers,bin_centers_new)
+    def map_values(self,val_orig,bin_centers_orig,model_diam_orig=None,model_sigma_orig=None):
+        if not model_diam_orig:
+            return map_bin_values(val_orig,bin_centers_orig,self._bin_centers)
         else:
-            return map_modal_values(val_orig,self._modal_diam,self._modal_sigma,bin_centers_new)
+            return map_modal_values(val_orig,modal_diam_orig,modal_sigma_orig,self._bin_centers)
 

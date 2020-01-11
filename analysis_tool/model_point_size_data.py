@@ -55,7 +55,7 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
             total =  np.zeros((self._bin_num,))
             for key in self._type_info:
                 t = self._type_info[key]
-                mapped = t.map_values(list(row[t.get_varlist()].values),self._bin_centers)
+                mapped = self.map_values(list(row[t.get_varlist()].values),t.get_bin_centers())
                 total += mapped
             return total
         

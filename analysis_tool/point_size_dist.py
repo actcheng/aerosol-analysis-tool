@@ -57,7 +57,7 @@ class PointSizeDist(GroupData):
             fig,ax = plt.subplots()
             for key in self._keys:
                 centers = self._bin_centers[key]
-                group = self._groupbys[key].get_group(site).dropna()
+                group = self._groupbys[key].get_group(site).dropna(how='all')
                 if key == count_key: 
                     counts = len(group)
                 data =  list(group.mean()[self._size_col[key]])
@@ -66,6 +66,7 @@ class PointSizeDist(GroupData):
             ax_settings['title'] = f'{site}: (N={counts})' if counts>0 else site
             ax_settings['save_suffix'] = site
             ax_set(ax,**ax_settings,**kwargs)
+            plt.close()
 
 
 

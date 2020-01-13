@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import interpolate
 
-from size_utils import cal_bin_centers, map_bin_values, map_modal_values 
+from size_utils import cal_bin_centers, map_bin_values, map_modal_values
 
 class TypeSizeInfo():
     """
@@ -44,7 +44,7 @@ class TypeSizeInfo():
             self._modal_sigma = modal_sigma
         else:            
             self._bin_range = bin_range
-            self._bin_centers = cal_bin_centers(bin_num,bin_range)
+            self._bin_centers, self._bin_bounds = cal_bin_centers(bin_num,bin_range)
             self.set_bin_num(bin_num)
 
     # Access information
@@ -111,9 +111,9 @@ class TypeSizeInfo():
     def get_centerlist(self):
         return self._centerlist    
 
-    def map_values(self,val_orig,bin_centers_orig,model_diam_orig=None,model_sigma_orig=None):
-        if not model_diam_orig:
+    def map_values(self,val_orig,bin_centers_orig,modal_diam_orig=None,modal_sigma_orig=None, modal_peak_orig=None):
+        if not modal_diam_orig:
             return map_bin_values(val_orig,bin_centers_orig,self._bin_centers)
-        # else:
-        #     return map_modal_values(val_orig,modal_diam_orig,modal_sigma_orig,self._bin_centers)
+        else:
+            return map_modal_values(val_orig,modal_diam_orig,modal_sigma_orig,self._bin_centers)
 

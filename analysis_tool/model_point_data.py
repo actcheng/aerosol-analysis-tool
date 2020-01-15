@@ -16,9 +16,11 @@ class ModelPointData(PointData):
     def get_avg_data(self):
         return self._avg_data
 
-    def read_grads_all(self,grads_dir,grads_names,start_dates,
+    def read_grads_all(self,grads_dir,grads_names,start_dates,               
                        time_ranges=[1,1],file_suffixes=None,
-                       check='check',deltaseconds=60*60*24,**kwargs):
+                       zrange=None,check='check',
+                       show_progress=True, save=True,
+                       deltaseconds=60*60*24,**kwargs):
         if type(grads_names) != list: grads_names = [grads_names]
         if type(time_ranges[0]) != list: time_ranges = [time_ranges]
         if type(start_dates) != list: start_dates = [start_dates] 
@@ -38,38 +40,69 @@ class ModelPointData(PointData):
             else:
                 this_date = date_list[-1] + datetime.timedelta(seconds=deltaseconds) 
             
+        data_num = len(grads_names)*len(self._site_info.index)*len(time_ranges)
+        processed = 0
+
         ga = GradsWrapper()
-        all_data = pd.DataFrame()        
+        all_data = pd.DataFrame()     
         for grads_name in grads_names:
             df = pd.DataFrame()
             for i in range(len(time_ranges)):
+
                 time_range,date_list = time_ranges[i],date_lists[i]
+                
                 if len(time_ranges) > 1:
                     if file_suffixes:
                         ga.open(f'{grads_dir}_{file_suffixes[i]}/{check}',grads_name)
                     else:
                         ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
                 else:
-                    ga.open(f'{grads_dir}/{check}',grads_name)          
+                    ga.open(f'{grads_dir}/{check}',grads_name)     
+
                 for site in self._site_info.index[:]:
                     lat,lon = self._site_info.loc[site,'Latitude'],self._site_info.loc[site,'Longitude']
-                    try:
-                        ga.locate(lat,lon)
-                        out = ga.tloop(grads_name,time_range,**kwargs)
-                        df_site = pd.DataFrame([[site]*date_len,date_list,out],
-                                        index=['Site name','Start date',grads_name]).T
-                        
+                    ga.locate(lat,lon)
+                    try:    
+                        if zrange:
+                            df_site = pd.DataFrame([[site]*len(date_list),date_list],
+                                        index=['Site name','Start date']).T
+                            names = [f'{grads_name}.{z}' for z in range(zrange[0],zrange[1]+1)]
+                            for i in range(len(names)):
+                                z = zrange[0]+i
+                                name = f'{grads_name}.{z}'
+                                ga.zlevel(z)
+                                out = ga.tloop(grads_name,time_range,**kwargs)
+                                df_site[name] = out
+                        else:
+                            names = [grads_name]
+                            out = ga.tloop(grads_name,time_range,**kwargs)
+                            df_site = pd.DataFrame([[site]*date_len,date_list,out],
+                                            index=['Site name','Start date',grads_name]).T
+                            
                         df = pd.concat([df,df_site],ignore_index=True,sort=False)
+
                     except:
                         print(f'Error in getting data at {site} (lat: {lat}, lon:{lon})')
+                    
+                    processed+=1
+                    if show_progress: 
+                        draw_progress_bar(processed/data_num)
+                    else:
+                        print(f'Finished reading {processed}/{data_num}')
+                        sys.stdout.flush()
                 ga.close()
-            df[grads_name] = df[grads_name].astype(float)
+
+            df[names] = df[names].astype(float)
+            
             if len(all_data):
                     all_data = all_data.merge(df,on=['Site name','Start date'],how='outer')
             else:
                 all_data = df
-        self._all_data = all_data
-        return 
+
+        if save:
+            self._all_data = all_data
+        else:
+            return all_data
 
     def get_grads_avg(self,grads_dir,grads_names,
                       time_ranges=[1,1],file_suffixes=None,
@@ -113,5 +146,13 @@ class ModelPointData(PointData):
         self._avg_data = df_avg 
         return df_avg
 
+    def get_grads_median(self,*args,**kwargs):
+
+        all_data = (self.read_grads_all(*args,**kwargs,save=False)
+                        .drop(['Start date'],axis=1)
+                        .groupby('Site name')
+                        .median())
+      
+        return all_data
 
     

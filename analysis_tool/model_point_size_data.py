@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import datetime
 
 from size_utils import cal_bin_centers
 from type_size_info import TypeSizeInfo
@@ -24,7 +25,8 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
     def set_type_info(self, type_info_list):
         self._type_info = type_info_list and {t.get_aerosol_name(): t for t in type_info_list}
 
-    def get_grads_avg_from_info(self,grads_dir,cal_total=True,                                 
+    def get_grads_avg_from_info(self,grads_dir, type='mean',# Mean, median
+                                 cal_total=True,                                 
                                  cal_centers_from_num=False,
                                  to_dlnr=False,
                                  to_dlogr=False,
@@ -35,8 +37,12 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
         for key in self._type_info:
             t = self._type_info[key]
             print(f'\nRead {t.get_aerosol_name()} data')
-            avg = self.get_grads_avg(grads_dir,[t.get_var_name()],*args,zrange=[1,t.get_bin_num()],**kwargs)
-            
+            if type == 'median':
+                start_dates = [datetime.datetime.now()] # Dummy
+                avg = self.get_grads_median(grads_dir,[t.get_var_name()],start_dates,zrange=[1,t.get_bin_num()],**kwargs)
+            else:
+                avg = self.get_grads_avg(grads_dir,[t.get_var_name()],*args,zrange=[1,t.get_bin_num()],**kwargs) 
+
             if cal_centers_from_num:
                 avg_num = self.get_grads_avg(grads_dir,[t.get_var_num_name()],*args,zrange=[1,t.get_bin_num()],**kwargs)
                 dens = t.get_density() # Should not be considered in new output

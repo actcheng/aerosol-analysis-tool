@@ -26,6 +26,9 @@ from point_avg import PointAvg
 from point_hist import PointHist
 from point_size_dist import PointSizeDist
 
+## Zonal data
+from model_zonal_data import ModelZonalData
+
 ### Abstract classes 
 ##
 ## base_data  : Parent class of all other classes 

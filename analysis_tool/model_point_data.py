@@ -1,6 +1,6 @@
 from point_data import PointData
 from grads_wrapper import GradsWrapper
-from analysis_utils import draw_progress_bar
+from analysis_utils import draw_progress_bar, ga_open_file
 import pandas as pd
 import numpy as np
 import datetime 
@@ -51,13 +51,7 @@ class ModelPointData(PointData):
 
                 time_range,date_list = time_ranges[i],date_lists[i]
                 
-                if len(time_ranges) > 1:
-                    if file_suffixes:
-                        ga.open(f'{grads_dir}_{file_suffixes[i]}/{check}',grads_name)
-                    else:
-                        ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
-                else:
-                    ga.open(f'{grads_dir}/{check}',grads_name)     
+                ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges)     
 
                 for site in self._site_info.index[:]:
                     lat,lon = self._site_info.loc[site,'Latitude'],self._site_info.loc[site,'Longitude']
@@ -119,13 +113,8 @@ class ModelPointData(PointData):
         for grads_name in grads_names:
             for i in range(len(time_ranges)):
                 trange = time_ranges[i]
-                if len(time_ranges) > 1:
-                    if file_suffixes:
-                        ga.open(f'{grads_dir}_{file_suffixes[i]}/{check}',grads_name)
-                    else:
-                        ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
-                else:
-                    ga.open(f'{grads_dir}/{check}',grads_name)  
+                ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges)
+                  
                 for site in self._site_info.index[:]:
                     lat,lon = self._site_info.loc[site,'Latitude'],self._site_info.loc[site,'Longitude']
                     value = ga.get_single_point(grads_name,lat,lon,trange=trange,zrange=zrange,**kwargs) *(trange[1]-trange[0]+1)/ttotal

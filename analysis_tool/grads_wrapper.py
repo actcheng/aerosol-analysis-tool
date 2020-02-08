@@ -4,11 +4,11 @@ from py3grads import Grads
 from analysis_utils import lon180,lon360
 
 class GradsWrapper():
-    def __init__(self,verbose=False):
+    def __init__(self,verbose=False,print=False):
         self._ga = Grads(verbose=verbose)
         self._files = []
         self._definitions = {}
-        self._print = False
+        self._print = print
         self._maxlon = 360
 
         self._ga('set gxout print')
@@ -144,5 +144,6 @@ class GradsWrapper():
                 print('Output from Grads:')
                 print(self.display(var)[0])
         
-
-    
+    def tave_exp(self,var,trange,op=''):
+        self.ga_run('define x=ave({}{},t={},t={})'.format(self.get_varname(var),op,trange[0],trange[1]))
+        return self.ga_exp('x')

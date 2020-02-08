@@ -13,6 +13,9 @@
     - day_to_date
     - filter_time
 
+    # Read grads
+    - ga_open_file
+
     # Statistics
     - remove_outlier
 
@@ -78,6 +81,16 @@ def filter_time(df,col='',period=[],year=None,month=None):
     else:
         return df
 
+## GrADS
+def ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges):
+    if len(time_ranges) > 1:
+        if file_suffixes:
+            ga.open(f'{grads_dir}_{file_suffixes[i]}/{check}',grads_name)
+        else:
+            ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
+    else:
+        ga.open(f'{grads_dir}/{check}',grads_name)  
+
 ## Statistics
 def remove_outlier(series_in):
     q1 = series_in.quantile(0.25)
@@ -133,7 +146,7 @@ def ax_set(ax,
         print(f'Saved as {full}')
 
 ## Output tool
-def draw_progress_bar(percent, bar_len = 50):
+def draw_progress_bar(percent, bar_len = 50, show_progress=True):
     import sys
     sys.stdout.write("\r")
     progress = ""

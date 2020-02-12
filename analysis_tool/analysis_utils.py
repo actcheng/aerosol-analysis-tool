@@ -14,6 +14,7 @@
     - filter_time
 
     # Read grads
+    - ga_read_ctl
     - ga_open_file
 
     # Statistics
@@ -90,6 +91,29 @@ def ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges):
             ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)
     else:
         ga.open(f'{grads_dir}/{check}',grads_name)  
+
+def ga_read_ctl(ga,*args):
+    ga_open_file(ga,*args)
+    ctl=ga.ga_run('q ctlinfo')
+    ga.close()
+    ctl = [x for line in ctl[0] for x in line.split()]
+
+    # Get lon
+    start = ctl.index('xdef')
+    nlon= int(ctl[start+1])
+    lons = [float(x) for x in ctl[start+3:start+nlon+3]]
+
+    # Get lat
+    start = ctl.index('ydef')
+    nlat = int(ctl[start+1])
+    lats = [float(x) for x in ctl[start+3:start+nlat+3]]
+
+    # Get zlevs
+    start = ctl.index('zdef')
+    nz = int(ctl[start+1])
+    zlevs = [float(x) for x in ctl[start+3:start+nz+3]]
+
+    return lats, lons, zlevs
 
 ## Statistics
 def remove_outlier(series_in):

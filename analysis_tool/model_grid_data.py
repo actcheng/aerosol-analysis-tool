@@ -74,7 +74,7 @@ class ModelGridData(GridData):
                     
                 ga.close()
                 data.append(np.stack(data_z))
-            all_data[grads_name]= np.stack(data,axis=-1)
+            all_data[grads_name]= np.concatenate(data,axis=-1)
 
         self._data = all_data
         return 

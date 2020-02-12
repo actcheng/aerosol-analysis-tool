@@ -29,6 +29,9 @@ from point_size_dist import PointSizeDist
 ## Zonal data
 from model_zonal_data import ModelZonalData
 
+## Grid data
+from model_grid_data import ModelGridData
+
 ### Abstract classes 
 ##
 ## base_data  : Parent class of all other classes 

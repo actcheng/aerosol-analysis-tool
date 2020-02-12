@@ -1,6 +1,6 @@
-from zonal_data import ZonalData
+from grid_data import GridData
 from grads_wrapper import GradsWrapper
-from analysis_utils import draw_progress_bar, ga_open_file, ax_set
+from analysis_utils import draw_progress_bar, ga_open_file, ga_read_ctl, ax_set
 
 import matplotlib.pyplot as plt 
 import matplotlib.colors as mcolors
@@ -10,9 +10,10 @@ import datetime
 import os
 import sys
 
-class ModelZonalData(ZonalData):
+class ModelZonalData(GridData):
     def __init__(self):
-        ZonalData.__init__(self)
+        GridData.__init__(self)
+        self._axis_names = ['Height','Latitude']
     
     def read_grads_zonal(self,grads_dir,grads_names,
                       time_ranges=[1,1],file_suffixes=None,
@@ -23,34 +24,25 @@ class ModelZonalData(ZonalData):
         ga = GradsWrapper(print=False)
 
         # Read latitude & height info
-        ga_open_file(ga,grads_dir,grads_names[0],check,0,file_suffixes,time_ranges)
-        ctl=ga.ga_run('q ctlinfo')
-        ga.close()
-        ctl = [x for line in ctl[0] for x in line.split()]
+        lats, _, zlevs = ga_read_ctl(ga,grads_dir,grads_names[0],check,0,file_suffixes,time_ranges)
+        
+        self.set_grid('lats',lats)
 
-        # Get lat
-        start = ctl.index('ydef')
-        nlat = int(ctl[start+1])
-        lats = [float(x) for x in ctl[start+3:start+nlat+3]]
-        self.set_lats(lats)
-
-        # Get height
+        # # Get height
         if zrange[1] == zrange[0]:
-            self.set_zlevs([0])
+            self.set_grid('zlevs',zlevs[0])
         else:
-            start = ctl.index('zdef')+2
-            zlevs = [float(x) for x in ctl[start+zrange[0]:start+zrange[1]+1]]
-            self.set_zlevs(zlevs)
+            self.set_grid('zlevs',zlevs[zrange[0]:zrange[1]+1])
 
         # Read data
         ttotal = sum(t[1]-t[0]+1 for t in time_ranges)
-        data_num = len(time_ranges)*len(grads_names)*self._nz
+        data_num = len(time_ranges)*len(grads_names)*self._dims['zlevs']
         
         processed = 0
         all_data = self._data
 
         for grads_name in grads_names:
-            data = np.zeros((self._nz,self._nlat)) 
+            data = np.zeros((self._dims['zlevs'],self._dims['lats'])) 
             for i in range(len(time_ranges)):
                 trange = time_ranges[i]
                 ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges)
@@ -79,7 +71,7 @@ class ModelZonalData(ZonalData):
         if not ax: fig, ax = plt.subplots()
         data = self._data[key]
         if key2: data = self._data[key2]-data
-        pcm=ax.pcolormesh(self._lats,self._zlevs/1000,data,cmap=cmap,norm=norm)
+        pcm=ax.pcolormesh(self._grid['lats'],self._grid['zlevs']/1000,data,cmap=cmap,norm=norm)
 
         ax_settings = {'xlabel': 'Latitude',
                        'ylabel': 'Height (km)',

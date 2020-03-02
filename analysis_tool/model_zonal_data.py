@@ -45,6 +45,7 @@ class ModelZonalData(GridData):
             data = np.zeros((self._dims['zlevs'],self._dims['lats'])) 
             for i in range(len(time_ranges)):
                 trange = time_ranges[i]
+                if 0 in trange: continue
                 ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges)
 
                 for i,z in enumerate(range(zrange[0],zrange[1]+1)):
@@ -52,10 +53,10 @@ class ModelZonalData(GridData):
                     data[i] += np.nanmean(ga.tave_exp(grads_name,[1,2],**kwargs),axis=1)*(trange[1]-trange[0]+1)/ttotal
             
                     processed+=1
-                    # if show_progress: 
-                    #     draw_progress_bar(processed/data_num,show_progress)
+                    if show_progress: 
+                        draw_progress_bar(processed/data_num,show_progress)
                     # else:
-                    print(f'Finished reading {processed}/{data_num}')
+                    # print(f'Finished reading {processed}/{data_num}')
                     sys.stdout.flush()
                     
                 ga.close()

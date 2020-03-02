@@ -1,4 +1,4 @@
-from analysis_utils import ax_selector, ax_set
+from analysis_utils import ax_selector, ax_set, cal_bias
 from base_data import Data
 
 import pandas as pd
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 '''''
 Example input:
 
-avg_info = {'Orig':model_avg['scont_sfc'],
+avg_info = {'Orig':model_avg['scont_sfc'],s
           'Bin':model_avg_bin['scont_sfc'],
           'Ebas2006: SO4':ebas_avg_2006[('SO4--', 'mean')],
           'EbasAll: SO4':ebas_avg[('SO4--', 'mean')],
@@ -34,29 +34,39 @@ class PointAvg(Data):
     def get_sites(self):
         return list(self._avg_data.index.get_level_values('Site name').unique())
 
-    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],title='',color='b',label=None,**kwargs):
+    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],title='',colors=['r'],label=None,same_fig=True,ax=None,**kwargs):
         corr = self._avg_data[model_labels+obs_labels].corr()
         ncols=len(model_labels)
         nrows=len(obs_labels)
         if not axes: 
-            fig, axes = plt.subplots(ncols=ncols,nrows=nrows,figsize=(ncols*4.2,nrows*4))
+            if same_fig:
+                if not ax: fig, ax = plt.subplots(figsize=(4.2,4))
+            else:
+                fig, axes = plt.subplots(ncols=ncols,nrows=nrows,figsize=(ncols*4.2,nrows*4))
         
         for i in range(nrows):
             for j in range(ncols):
-                ax = ax_selector(axes,i,j,nrows,ncols)
+                if same_fig: 
+                    label = label or model_labels[j].split(':')[0]
+                    color=colors[j]
+                else:
+                    ax = ax_selector(axes,i,j,nrows,ncols)
+                    color = colors[0]
                 self._avg_data.plot.scatter(obs_labels[i],model_labels[j],ax=ax,c=color,label=label)
                 if model_err or obs_err:
-                    plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none",color=color)
+                    plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none",color=color,label=None)
 
                 rtop = max(xlim[1],ylim[1])
                 ax.plot([0,rtop],[0,rtop],'k')
-                corr_res = 'Corr={0:.2f}'.format(corr.at[obs_labels[i],model_labels[j]])
-                print(model_labels, ' : ', corr_res)
+                corr_res = corr.at[obs_labels[i],model_labels[j]]
+                bias = cal_bias(self._avg_data[obs_labels[i]],self._avg_data[model_labels[j]])
+                print(model_labels[j], ' : ', 'Corr={0:.2f}'.format(corr_res), 'Bias={0:.2f}'.format(bias))
                 ax_settings = {
-                       'title': title or corr_res,
+                    #    'title': title or corr_res,
                        'save_suffix':f'{obs_labels[i].lower()}_{model_labels[j].lower().replace(" ","_")}',
                        'xlim':xlim,
                        'ylim':ylim}
+                       
                 ax_set(ax,**ax_settings,**kwargs)
         return axes
         
@@ -77,7 +87,7 @@ class PointAvg(Data):
             ax.semilogy('Start date',key,cases[key],data=site_df,markersize=10,label=key)
         if errs:
             for key in errs:
-                plt.errorbar('Start date',key,yerr=errs[key],data=site_df,fmt="none",label=None)    
+                ax.errorbar('Start date',key,yerr=errs[key],data=site_df,fmt="none",label=None)    
 
         ax_settings = {'ylim': ylim,
                        'xlabel': 'Months',

@@ -25,18 +25,29 @@ class PointHist(GroupData):
     def __init__(self,info=None,**kwargs):
         GroupData.__init__(self,info)
 
-    def plot_frequency(self,param,bins,xscale='log',ylabel='Relative frequency',**kwargs): 
+    def plot_frequency(self,param,bins,xscale='log',ylabel='Relative frequency',nrows=0,ncols=0,**kwargs): 
         """ Plot histogram based on the given parameter as passed in the info"""
-        axes = []
+        # axes = []
         ax_settings = {'xscale': xscale, 'ylabel':ylabel }
+        same_fig = ncols > 0 and nrows > 0
+        if same_fig:
+            fig, axes = plt.subplots(nrows,ncols,figsize=(5*ncols,4*nrows))
+        else:
+            axes = []
 
         centers = [(bins[i]+bins[i+1])*0.5 for i in range(len(bins)-1)]
         for i, groupname in enumerate(self._groupnames):
-            fig,ax = plt.subplots()    
+            irow, icol = i//3, i%3
+            
+            if same_fig:
+                ax = axes[irow, icol]
+            else:
+                fig, ax = plt.subplots()
+                axes.append(ax)
+
             for key in self._keys:
                 try:
                     data = self._groupbys[key].get_group(groupname)[self._info[key][param]]
-
                     ax.plot(centers,get_freq(data,bins=bins),**self._styles[key],label=key)
                 except:
                     print(f'Not plotted for {key} at {groupname}')
@@ -44,7 +55,5 @@ class PointHist(GroupData):
             ax_settings['save_suffix'] = groupname
 
             ax_set(ax,**ax_settings,**kwargs)
-            
-            axes.append(ax)
 
         return axes

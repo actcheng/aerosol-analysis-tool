@@ -19,6 +19,7 @@
 
     # Statistics
     - remove_outlier
+    - cal_bias
 
     # Geolocations
     - lon360
@@ -132,6 +133,12 @@ def get_freq(data,**kwargs):
     data = hist[0]/sum(hist[0])
     return data
 
+def cal_bias(obs,model):
+    import numpy as np
+    diff = (model-obs)/obs
+    valid = len(model[~np.isnan(diff)])
+    return np.nansum(diff)/valid
+
 ## Geolocations
 def lon360(lon180):
     return lon180 if lon180 > 0 else lon180 + 360
@@ -170,17 +177,13 @@ def ax_set(ax,
         print(f'Saved as {full}')
 
 ## Output tool
-def draw_progress_bar(percent, bar_len = 50, show_progress=True):
+def draw_progress_bar(percent, show_progress=True, bar_len = 50):
     import sys
     sys.stdout.write("\r")
-    progress = ""
-    for i in range(bar_len):
-        if i < int(bar_len * percent):
-            progress += "="
-        else:
-            progress += " "
-
-    sys.stdout.write("[{:<{}}] {:.0f}%".format("=" * int(bar_len * percent), bar_len, percent * 100))
+    filled_len = int(bar_len * percent)
+    progress = "="*filled_len + " "*(bar_len-filled_len)
+    sys.stdout.write("[{}] {:.0f}%".format(progress, percent * 100))
+    # sys.stdout.write("[{:<{}}] {:.0f}%".format("=" * int(bar_len * percent), bar_len, percent * 100))
     sys.stdout.flush()
 
     return

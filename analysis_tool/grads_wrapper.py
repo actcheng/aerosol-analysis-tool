@@ -96,6 +96,9 @@ class GradsWrapper():
     def tave(self,var,trange,op=''):
         return self.ga_run('d ave({}{},t={},t={})'.format(self.get_varname(var),op,trange[0],trange[1]))
 
+    def tave_grid(self,var,trange,op=''):
+        return self.ga_exp('ave({}{},t={},t={})'.format(self.get_varname(var),op,trange[0],trange[1]))
+
     def aave(self,var,trange=None,x=[0,360],y=[-90,90],op=''):
         pass
 

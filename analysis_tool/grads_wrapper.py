@@ -45,7 +45,6 @@ class GradsWrapper():
     def open(self,filedir,var):
         filepath = os.path.join(filedir,var)
         self.ga_run('open '+filepath)
-        # var = self.query(len(self._files)+1)[-2].split()[0]
         self._files.append(var)
 
     def close(self):
@@ -99,8 +98,16 @@ class GradsWrapper():
     def tave_grid(self,var,trange,op=''):
         return self.ga_exp('ave({}{},t={},t={})'.format(self.get_varname(var),op,trange[0],trange[1]))
 
-    def aave(self,var,trange=None,x=[0,360],y=[-90,90],op=''):
-        pass
+    def aave(self,var,trange=None,global_ave=True,x=[0,360],y=[-90,90],op=''):
+        if global_ave:
+            area='g'
+        else:
+            area='x={},x={},y={},y={}'.format(x[0],x[1],y[0],y[1])
+    
+        if trange:
+            return float(self.ga_run('d aave(ave({}{},t={},t={}),{})'.format(var,op,trange[0],trange[1],area))[0][2])
+        else:
+            return float(self.ga_run('d aave({}{},{})'.format(var,op,area))[0][1])
 
     def tloop(self,var,trange=None,**kwargs):
         if trange:

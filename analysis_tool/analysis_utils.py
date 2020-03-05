@@ -24,6 +24,7 @@
     # Geolocations
     - lon360
     - lon180
+    - grid_area
     
     # Plotting
     - ax_selector
@@ -32,8 +33,6 @@
     # Output tool
     - draw_progress_bar
 """
-
-
 
 ## Text and files
 def add_suffix(S,suf):
@@ -145,6 +144,18 @@ def lon360(lon180):
 
 def lon180(lon360):
     return lon360 if lon360 <= 180 else lon360 - 360
+
+def grid_area(lats,lons,radius=6371*1000):
+    '''
+    Calculate the grid area given the ranges of latitudes and longitudes
+        lats: [lat1,lat2]
+        lons: [lon1,lon2], area between lon1 and lon2
+    '''
+    from math import pi, sin
+    lon_diff = (lons[1]-lons[0])/180*pi
+    lat_diff = sin(lats[1]/180*pi)-sin(lats[0]/180*pi)
+    if lon_diff < 0: lon_diff += 2*pi
+    return radius**2*lat_diff*lon_diff
 
 # Plotting
 def ax_selector(axes,irow,icol,nrows,ncols):

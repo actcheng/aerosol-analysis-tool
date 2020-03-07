@@ -32,6 +32,9 @@ from model_zonal_data import ModelZonalData
 ## Grid data
 from model_grid_data import ModelGridData
 
+## Flux data
+from flux_data import FluxData
+
 ### Abstract classes 
 ##
 ## base_data  : Parent class of all other classes 

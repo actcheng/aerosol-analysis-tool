@@ -98,11 +98,8 @@ class GradsWrapper():
     def tave_grid(self,var,trange,op=''):
         return self.ga_exp('ave({}{},t={},t={})'.format(self.get_varname(var),op,trange[0],trange[1]))
 
-    def aave(self,var,trange=None,global_ave=True,x=[0,360],y=[-90,90],op=''):
-        if global_ave:
-            area='g'
-        else:
-            area='x={},x={},y={},y={}'.format(x[0],x[1],y[0],y[1])
+    def aave(self,var,trange=None,lons=[-180,180],lats=[-90,90],op=''):
+        area='lon={},lon={},lat={},lat={}'.format(lons[0],lons[1],lats[0],lats[1])
     
         if trange:
             return float(self.ga_run('d aave(ave({}{},t={},t={}),{})'.format(var,op,trange[0],trange[1],area))[0][2])

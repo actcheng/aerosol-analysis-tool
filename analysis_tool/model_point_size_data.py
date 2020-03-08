@@ -17,13 +17,15 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
         TypeSizeInfo.__init__(self,'Total','tt','bin',
                               bin_num=bin_num,bin_range=bin_range,**kwargs)
 
-        self._type_info = type_info_list and {t.get_aerosol_name(): t for t in type_info_list} 
+        self.type_info = type_info_list and {t.aerosol_name: t for t in type_info_list} 
 
-    def get_type_info(self):
+    @property
+    def type_info(self):
         return self._type_info
 
-    def set_type_info(self, type_info_list):
-        self._type_info = type_info_list and {t.get_aerosol_name(): t for t in type_info_list}
+    @type_info.setter
+    def type_info(self, type_info_list):
+        self._type_info = type_info_list and {t.aerosol_name: t for t in type_info_list}
 
     def get_grads_avg_from_info(self,grads_dir, type='mean',# Mean, median
                                  cal_total=True,                                 
@@ -36,33 +38,33 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
 
         for key in self._type_info:
             t = self._type_info[key]
-            print(f'\nRead {t.get_aerosol_name()} data')
+            print(f'\nRead {t.aerosol_name} data')
             if type == 'median':
                 start_dates = [datetime.datetime.now()] # Dummy
-                avg = self.get_grads_median(grads_dir,[t.get_var_name()],start_dates,zrange=[1,t.get_bin_num()],**kwargs)
+                avg = self.get_grads_median(grads_dir,[t.var_name],start_dates,zrange=[1,t.bin_num],**kwargs)
             else:
-                avg = self.get_grads_avg(grads_dir,[t.get_var_name()],*args,zrange=[1,t.get_bin_num()],**kwargs) 
+                avg = self.get_grads_avg(grads_dir,[t.var_name],*args,zrange=[1,t.bin_num],**kwargs) 
 
             if cal_centers_from_num:
-                avg_num = self.get_grads_avg(grads_dir,[t.get_var_num_name()],*args,zrange=[1,t.get_bin_num()],**kwargs)
-                dens = t.get_density() # Should not be considered in new output
+                avg_num = self.get_grads_avg(grads_dir,[t.var_num_name],*args,zrange=[1,t.bin_num],**kwargs)
+                dens = t.density # Should not be considered in new output
                 centers = (avg.values[:,2:]/avg_num.values[:,2:]/(dens*np.pi/6))**(1/3)*1e6
             else:
-                centers = np.array([t.get_bin_centers()]*len(avg))
+                centers = np.array([t.bin_centers]*len(avg))
             
-            avg_centers = pd.DataFrame(np.array(centers),columns=t.get_centerlist(),index=avg.index)    
+            avg_centers = pd.DataFrame(np.array(centers),columns=t.centerlist,index=avg.index)    
 
             if to_dlnr:
-                dlnr = np.log(t.get_bin_centers()[1]/2)-np.log(t.get_bin_centers()[0]/2)
-                # dens = t.get_density() # Should not be considered in new output
+                dlnr = np.log(t.bin_centers[1]/2)-np.log(t.bin_centers[0]/2)
+                # dens = t.density # Should not be considered in new output
                 avg = avg/dlnr #*1.0E6/dens
             elif to_dlogr:
-                dlogr = np.log10(t.get_bin_centers()[1]/2)-np.log10(t.get_bin_centers()[0]/2) 
+                dlogr = np.log10(t.bin_centers[1]/2)-np.log10(t.bin_centers[0]/2) 
                 avg = avg/dlogr
 
-            site_df = (avg[t.get_varlist()].merge(avg_centers,left_index=True,right_index=True) 
+            site_df = (avg[t.varlist].merge(avg_centers,left_index=True,right_index=True) 
                         if cal_centers_from_num 
-                        else avg[t.get_varlist()] )
+                        else avg[t.varlist] )
             df_avg = df_avg.merge(site_df,left_index=True,right_index=True)
                 
 
@@ -79,19 +81,19 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
             total =  np.zeros((self._bin_num,))
             for key in self._type_info:
                 t = self._type_info[key]
-                if t.get_centerlist()[0] in row.index:
-                    mapped = self.map_values(list(row[t.get_varlist()].values),list(row[t.get_centerlist()].values))
+                if t.centerlist[0] in row.index:
+                    mapped = self.map_values(list(row[t.varlist].values),list(row[t.centerlist].values))
                 else:
-                    mapped = self.map_values(list(row[t.get_varlist()].values),t.get_bin_centers()) 
+                    mapped = self.map_values(list(row[t.varlist].values),t.bin_centers) 
                 total += mapped
             return total
         
         df_total = pd.DataFrame(self._avg_data.apply(lambda x: map_row_values(x),axis=1)        
                                 .values.tolist(), 
-                                columns=self.get_varlist(),
+                                columns=self.varlist,
                                 index=self._avg_data.index)
         
-        return (self._avg_data.drop(columns=self.get_varlist(),errors='ignore')
+        return (self._avg_data.drop(columns=self.varlist,errors='ignore')
                  .merge(df_total,left_index=True,right_index=True))
         
     def set_avg_to_all(self):
@@ -113,8 +115,8 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
             for t in self._type_info:
                 left.append(0)
                 right.append(0)
-                centers = t.get_bin_centers()
-                for i, col in enumerate(t.get_varlist()):
+                centers = t.bin_centers
+                for i, col in enumerate(t.varlist):
                     if centers[i] < cutoff_val:
                         left[-1] += row[col]
                     else:
@@ -122,7 +124,7 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
 
             return [sum(left),sum(right)] + left + right
 
-        columns = ['left','right'] + [f'{side}.{t.get_var_prefix()}' for side in ['left', 'right'] for t in self._type_info]
+        columns = ['left','right'] + [f'{side}.{t.var_prefix}' for side in ['left', 'right'] for t in self._type_info]
         df_part = pd.DataFrame(self._avg_data.apply(lambda x: summation(x),axis=1)
                                    .values.tolist(),
                                 columns=columns,

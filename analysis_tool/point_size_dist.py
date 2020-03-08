@@ -32,20 +32,21 @@ class PointSizeDist(GroupData):
 
     def pick_bin_centers(self,key,group=None):
         if ('centers' not in self._info[key]) or (self._info[key]['centers'] == 'default'):
-            return self._info[key]['data'].get_bin_centers()  
+            return self._info[key]['data'].bin_centers  
         elif self._info[key]['centers'] == 'fixed':
-            return self._info[key]['data'].get_type_info()[key].get_bin_centers() 
+            return self._info[key]['data'].type_info[key].bin_centers 
         else:
-            columns=self._info[key]['data'].get_type_info()[key].get_centerlist()
+            columns=self._info[key]['data'].type_info[key].centerlist
             return list(group.mean()[columns])
 
     def pick_bin_num(self,key):
         if ('centers' not in self._info[key]) or (self._info[key]['centers'] == 'default'):
-            return self._info[key]['data'].get_bin_num() 
+            return self._info[key]['data'].bin_num 
         else: 
-            return self._info[key]['data'].get_type_info()[key].get_bin_num()
+            return self._info[key]['data'].type_info[key].bin_num
 
-    def get_bin_centers(self):
+    @property
+    def bin_centers(self):
         return self._bin_centers
 
     def plot_size_dist(self,

@@ -12,11 +12,11 @@ class AeronetData(PointData,TypeSizeInfo):
         PointData.__init__(self)
         TypeSizeInfo.__init__(self,'AERONET','aero','bin',bin_num=22)
 
-        self.set_bin_centers([x*2 for x in [0.05,0.065604, 0.086077, 0.112939, 0.148184,
+        self.bin_centers = [x*2 for x in [0.05,0.065604, 0.086077, 0.112939, 0.148184,
              0.194429, 0.255105, 0.334716, 0.439173, 0.576227,
              0.756052, 0.991996, 1.301571, 1.707757, 2.240702,
              2.939966, 3.857452, 5.06126, 6.640745, 8.713145,
-             11.432287, 15.0]])
+             11.432287, 15.0]]
 
     def read_old_pickle(self,pickle_name):
 

@@ -33,7 +33,8 @@ from model_zonal_data import ModelZonalData
 from model_grid_data import ModelGridData
 
 ## Flux data
-from flux_data import FluxData
+from model_flux_data import ModelFluxData
+from model_flux_size_data import ModelFluxSizeData
 
 ### Abstract classes 
 ##

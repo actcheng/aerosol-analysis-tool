@@ -37,11 +37,11 @@ class Flux():
     def fractions(self):
         return self._fractions
 
-class FluxData(Data):
-    """class FluxData
+class ModelFluxData(Data):
+    """class ModelFluxData
 
     """
-    def __init__(self,zrange=[1,1],time_ranges=[[1,1]],prefix='',suffix='',filedir=''):
+    def __init__(self,zrange=[1,1],time_ranges=[[1,1]],prefix='',suffix='',filedir='',**kwargs):
         Data.__init__(self)
 
         self.filedir = filedir
@@ -127,7 +127,7 @@ class FluxData(Data):
     def read_aave(self,grads_names,
                   lons=[-180,180],lats=[-90,90],
                   time=3600*35*365,check='check',op='',
-                  positive=True,**kwargs): 
+                  screen_negative=True,**kwargs): 
         
         area = grid_area(lats,lons)
         op = '*{}*{}{}'.format(area,time,op)
@@ -154,9 +154,11 @@ class FluxData(Data):
 
                 ga.close()
 
-            if positive: 
-                for j in range(self.nz):
-                    data[grads_name][j] = max(data[grads_name][j],0)
+            
+            for j in range(self.nz):
+                if 'mass' in grads_name:
+                    print('mass', grads_name, data[grads_name][j])
+                data[grads_name][j] = max(data[grads_name][j],0) if screen_negative else abs(data[grads_name][j])
         return data
 
     def read_sources(self,sources,**kwargs):

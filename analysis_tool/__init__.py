@@ -37,6 +37,9 @@ from model_grid_data import ModelGridData
 from model_flux_data import ModelFluxData
 from model_flux_size_data import ModelFluxSizeData
 
+## Plotting helpers
+from plot_2var import Plot2Var
+
 ### Abstract classes 
 ##
 ## base_data  : Parent class of all other classes 

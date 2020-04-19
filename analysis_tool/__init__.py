@@ -14,6 +14,7 @@ import grads_wrapper
 from improve_data import ImproveData
 from nas_data import NasData
 from aeronet_data import AeronetData
+from skynet_data import SkynetData
 from eusaar_data import EusaarData
 from model_point_data import ModelPointData
 

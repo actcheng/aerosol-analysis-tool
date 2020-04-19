@@ -4,12 +4,12 @@ from py3grads import Grads
 from analysis_utils import lon180,lon360
 
 class GradsWrapper():
-    def __init__(self,verbose=False,print=False):
+    def __init__(self,verbose=False,print=False,maxlon=180):
         self._ga = Grads(verbose=verbose)
         self._files = []
         self._definitions = {}
         self._print = print
-        self._maxlon = 360
+        self._maxlon = maxlon
 
         self._ga('set gxout print')
         

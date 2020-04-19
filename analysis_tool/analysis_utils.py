@@ -13,6 +13,9 @@
     - day_to_date
     - filter_time
 
+    # Dataframe
+    - columns_first
+
     # Read grads
     - ga_read_ctl
     - ga_open_file
@@ -82,6 +85,12 @@ def filter_time(df,col='',period=[],year=None,month=None):
     else:
         return df
 
+## Dataframe
+def columns_first(df,cols_f):
+    cols = list(df.columns)
+    cols_b = [col for col in cols if col not in cols_f]
+    return  df[cols_f+cols_b]
+
 ## GrADS
 def ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges):
     if len(time_ranges) > 1:
@@ -132,9 +141,11 @@ def get_freq(data,**kwargs):
     data = hist[0]/sum(hist[0])
     return data
 
-def cal_bias(obs,model):
+def cal_bias(obs,model,bias_log=True):
     import numpy as np
-    diff = (model-obs)/obs
+
+    # diff = (model-obs)/obs
+    diff = (np.log10(model)-np.log10(obs))/np.log10(obs) if bias_log else (model-obs)/obs 
     valid = len(model[~np.isnan(diff)])
     return np.nansum(diff)/valid
 
@@ -175,11 +186,12 @@ def ax_set(ax,
     import matplotlib.pyplot as plt 
 
     attrs = ['title','xlim','ylim','xlabel','ylabel','xscale','yscale']
-    for attr in attrs:
-        if attr in kwargs:
-            getattr(ax,'set_'+attr)(kwargs[attr])
+    [getattr(ax,'set_'+attr)(kwargs[attr]) for attr in attrs if attr in kwargs]
 
-    if legend==True: ax.legend()
+    if legend==True: 
+        ax.legend()
+    else:
+        ax.legend().set_visible(False)
     plt.tight_layout()
 
     if savename: 

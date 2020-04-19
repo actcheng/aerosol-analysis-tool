@@ -34,8 +34,11 @@ class AeronetData(PointData,TypeSizeInfo):
             new_colnames[f'Bin {i}'] = f'dvdlnr.{i}'
         df = pd.read_pickle(pickle_name)[new_colnames.keys()].rename(columns=new_colnames)
 
-
-        self._site_info = df.groupby('Site name').mean()[site_col]
+        self._site_info = df.groupby('Site name').mean()[site_col]        
         self._all_data = df.drop(columns=site_col)
 
         self._site_info['Records'] = self.site_avg(agg=['count'],site_info_columns=site_col)[('Start date', 'count')]
+        self._site_info_all = self._site_info.copy()
+
+    def filter_sites(self,min_rec):
+        self._site_info = self._site_info_all[self._site_info_all['Records']>=min_rec] 

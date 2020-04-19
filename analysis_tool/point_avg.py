@@ -34,7 +34,8 @@ class PointAvg(Data):
     def get_sites(self):
         return list(self._avg_data.index.get_level_values('Site name').unique())
 
-    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,xlim=[0,1],ylim=[0,1],title='',colors=['r'],label=None,same_fig=True,ax=None,**kwargs):
+    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,bias_log=True,xlim=[0,1],ylim=[0,1],colors=['r'],marker='o',label=None,same_fig=True,ax=None,save_suffix=None,**kwargs):
+
         corr = self._avg_data[model_labels+obs_labels].corr()
         ncols=len(model_labels)
         nrows=len(obs_labels)
@@ -52,18 +53,17 @@ class PointAvg(Data):
                 else:
                     ax = ax_selector(axes,i,j,nrows,ncols)
                     color = colors[0]
-                self._avg_data.plot.scatter(obs_labels[i],model_labels[j],ax=ax,c=color,label=label)
+                self._avg_data.plot.scatter(obs_labels[i],model_labels[j],marker=marker,ax=ax,c=color,label=label)
                 if model_err or obs_err:
                     plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none",color=color,label=None)
 
                 rtop = max(xlim[1],ylim[1])
                 ax.plot([0,rtop],[0,rtop],'k')
                 corr_res = corr.at[obs_labels[i],model_labels[j]]
-                bias = cal_bias(self._avg_data[obs_labels[i]],self._avg_data[model_labels[j]])
+                bias = cal_bias(self._avg_data[obs_labels[i]],self._avg_data[model_labels[j]],bias_log)
                 print(model_labels[j], ' : ', 'Corr={0:.2f}'.format(corr_res), 'Bias={0:.2f}'.format(bias))
                 ax_settings = {
-                    #    'title': title or corr_res,
-                       'save_suffix':f'{obs_labels[i].lower()}_{model_labels[j].lower().replace(" ","_")}',
+                       'save_suffix': save_suffix or f'{obs_labels[i].lower()}_{model_labels[j].lower().replace(" ","_")}',
                        'xlim':xlim,
                        'ylim':ylim}
                        

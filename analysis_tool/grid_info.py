@@ -19,6 +19,9 @@ class GridInfo():
         self._grid[dim] = np.array(values)
         self._dims[dim] = len(values)
 
+    def set_axis_names(self,names):
+        self._axis_names = names
+        
     def get_axis_names(self):
         return self._axis_names
 

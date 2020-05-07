@@ -12,6 +12,7 @@
     # Date and time
     - day_to_date
     - filter_time
+    - dt64_to_dt
 
     # Dataframe
     - columns_first
@@ -28,6 +29,7 @@
     - lon360
     - lon180
     - grid_area
+    - bound_to_index
     
     # Plotting
     - ax_selector
@@ -36,6 +38,8 @@
     # Output tool
     - draw_progress_bar
 """
+import datetime
+import numpy as np
 
 ## Text and files
 def add_suffix(S,suf):
@@ -84,6 +88,12 @@ def filter_time(df,col='',period=[],year=None,month=None):
         df[(df[col].apply(lambda x: x.month==month))]
     else:
         return df
+
+def dt64_to_dt(dt64):  
+
+    return np.datetime64( dt64, 'us').astype(datetime.datetime)
+
+
 
 ## Dataframe
 def columns_first(df,cols_f):
@@ -168,6 +178,44 @@ def grid_area(lats,lons,radius=6371*1000):
     if lon_diff < 0: lon_diff += 2*pi
     return radius**2*lat_diff*lon_diff
 
+def bound_to_index(grid,bounds):
+    '''
+    Given a list of 1D points and upper & lower bounds, return the range of indices matching the condition
+
+    Inputs:
+    - grid: list of float (e.g. lons)
+    - bounds: [lower, upper], where lower & upper are float 
+
+    Return:
+    - ranges: list of float (1 <= len(ranges) <= 2)
+    '''
+
+    low, up = min(bounds), max(bounds)
+
+    low_ind,up_ind = sorted([search_index(grid,low), search_index(grid,up)])
+
+    if bounds[0] < bounds[1]:
+        return [[low_ind,up_ind]]
+    else:
+        return [[0,low_ind],[up_ind,len(grid)]]
+
+def search_index(arr,val):
+    '''Search for index with first value larger than value'''
+
+    if arr[0] > arr[1]: # Reversed
+        return len(arr) - search_index(arr[::-1],val) -1
+
+    l, r = 0, len(arr)
+    while l+1 < r:
+        mid = (l+r) // 2
+        if arr[mid] == val:
+            return mid
+        elif arr[mid] > val:
+            r = mid
+        else:
+            l = mid
+    return r if arr[l] < val else l
+        
 # Plotting
 def ax_selector(axes,irow,icol,nrows,ncols):
     if nrows==1:
@@ -190,8 +238,8 @@ def ax_set(ax,
 
     if legend==True: 
         ax.legend()
-    else:
-        ax.legend().set_visible(False)
+    # else:
+    #     ax.legend().set_visible(False)
     plt.tight_layout()
 
     if savename: 
@@ -209,4 +257,6 @@ def draw_progress_bar(percent, show_progress=True, bar_len = 50):
     # sys.stdout.write("[{:<{}}] {:.0f}%".format("=" * int(bar_len * percent), bar_len, percent * 100))
     sys.stdout.flush()
 
+    if percent == 1.:
+        print('\n')
     return

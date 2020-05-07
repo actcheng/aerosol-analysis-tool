@@ -121,10 +121,11 @@ class ModelGridData(GridData):
             self.set_grid('zlevs',zlevs)
 
         ttotal = sum(t[1]-t[0]+1 for t in time_ranges)
-        times = [start_date]*ttotal
-        for i in range(1,ttotal):
-            times[i] = times[i-1]+datetime.timedelta(1)
-        self.set_grid('time',times)
+
+        if self._grid['time'][0] == 0:
+            self.set_grid('time',[start_date])
+        elif start_date not in self._grid['time']:
+            self.set_grid('time',np.append(self._grid['time'],start_date))
 
         # Read data
         data_num = len(grads_names)*len(zlist)*len(time_ranges)
@@ -155,9 +156,13 @@ class ModelGridData(GridData):
                     
                 ga.close()
 
-            all_data[grads_name]= np.stack(data)
+            if grads_name in all_data:
+                all_data[grads_name] = np.vstack([all_data[grads_name],np.stack(data)])
+            else:
+                all_data[grads_name]= np.stack(data)
 
-        self._data = all_data
+        self._data = all_data 
+
         return 
 
     def plot_grid(self,param,z=0,ax=None,bounds=None,cmap='Reds',colorbar=True,mask=None,key2=None,cax=None,**kwargs):
@@ -222,6 +227,4 @@ class ModelGridData(GridData):
 
         return
             
-
-
-
+    

@@ -33,6 +33,9 @@ from model_zonal_data import ModelZonalData
 ## Grid data
 from model_grid_data import ModelGridData
 
+## MODIS data
+from modis_grid_data import ModisGridData
+
 ## Flux data
 from model_flux_data import ModelFluxData
 from model_flux_size_data import ModelFluxSizeData

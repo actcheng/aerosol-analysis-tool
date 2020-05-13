@@ -7,7 +7,7 @@ import matplotlib.colors as mcolors
 class Plot2Var():
 
     def __init__(self,data,xname,yname):
-        self.data = data
+        self.data = data[[xname,yname]].dropna()
         self._xname = xname
         self._yname = yname
 
@@ -51,7 +51,7 @@ class Plot2Var():
 
         n = len(self.data[self.xname])
         weights = np.ones(n)/n if density else np.ones(n)
- 
+
         pcm = ax.hist2d(self.data[self.xname],self.data[self.yname],bins=[xedges,yedges],weights=weights,cmap=cmap,norm=norm)
         if colorbar: plt.colorbar(pcm[3],ax=ax,extend='both')
 

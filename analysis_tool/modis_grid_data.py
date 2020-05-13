@@ -35,7 +35,7 @@ class ModisGridData(GridData):
 
     def __init__(self):
         GridData.__init__(self)
-        self._axis_names = ['satellite','lats','lons','time']
+        self._axis_names = ['satellite','time','lats','lons']
         self._masks = {} # Possible masks: valid_obs, ocean_only, land_only
         self._hist_axes = {}
 
@@ -102,9 +102,9 @@ class ModisGridData(GridData):
                     self._data[key] = np.zeros(grid_dims)
                 
                 if key in hist_attr:
-                    self._data[key][sate_ind,:,:,time_ind,:,:] = np.moveaxis(data,[0,1],[2,3])
+                    self._data[key][sate_ind,time_ind,:,:,:,:] = np.moveaxis(data,[0,1],[2,3])
                 else:
-                    self._data[key][sate_ind,:,:,time_ind] = data
+                    self._data[key][sate_ind,time_ind,:,:] = data
             hdf.end()
 
         hdf_names[:].apply(read_hdf_file,axis=1)

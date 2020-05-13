@@ -205,7 +205,7 @@ def search_index(arr,val):
     if arr[0] > arr[1]: # Reversed
         return len(arr) - search_index(arr[::-1],val) -1
 
-    l, r = 0, len(arr)
+    l, r = 0, len(arr)-1
     while l+1 < r:
         mid = (l+r) // 2
         if arr[mid] == val:

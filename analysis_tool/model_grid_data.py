@@ -165,42 +165,6 @@ class ModelGridData(GridData):
 
         return 
 
-    def plot_grid(self,param,z=0,ax=None,bounds=None,cmap='Reds',colorbar=True,mask=None,key2=None,cax=None,**kwargs):
-        
-        projection = ccrs.PlateCarree()
-
-        norm = mcolors.BoundaryNorm(bounds, ncolors=256) if bounds else None
-
-        if not ax: fig, ax = plt.subplots(figsize=(10,4),subplot_kw={'projection': ccrs.PlateCarree()})
-        
-        x = self.get_grid('lons')
-        y = self.get_grid('lats')
-        data = self.get_data()[param][z]
-        if key2:
-            data = data-self.get_data()[key2][z]
-
-        if type(mask) == np.ndarray: 
-            data = np.ma.array(data, mask = mask)
-            print(data.shape,mask.shape)       
-
-        ax.coastlines()
-        ax.set_xticks(np.linspace(-180, 180, 5), crs=projection)
-        ax.set_yticks(np.linspace(-90, 90, 5), crs=projection)
-
-        ax_settings = {
-            'xlim': [-180,180],
-            'ylim':[-90,90]
-        }
-        ax_set(ax,**ax_settings,**kwargs)
-
-        pcm=ax.pcolormesh(x,y,data,cmap=cmap,norm=norm)
-
-        if colorbar: 
-            cb = plt.colorbar(pcm,ax=ax,extend='max')
-           
-
-        return ax
-
     def plot_histogram(self,param,bins, zlist=1,
                        styles={},
                        xscale='linear',

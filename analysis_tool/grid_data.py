@@ -1,6 +1,6 @@
 from base_data import Data
 from grid_info import GridInfo
-from analysis_utils import bound_to_index, lon360, lon180, ax_set
+from analysis_utils import bound_to_index, lon360, lon180, ax_set,search_index
 import pandas as pd
 import numpy as np
 import collections
@@ -17,10 +17,13 @@ class GridData(Data,GridInfo):
         GridInfo.__init__(self)  
         self._data = {}
 
-    def axis_avg(self,axes_names=['time'],selections={}):
+    def axis_avg(self,axes_names=['time'],keys=None,selections={}):
         res = {}
-        for key in self._data:
+        if not keys: keys=self._data.keys()
+
+        for key in keys:
             avg = self._data[key].copy()
+            
             for axis in selections:
                 axis_ind = self._axis_names.index(axis)
 
@@ -29,13 +32,31 @@ class GridData(Data,GridInfo):
                 elif 'values' in selections[axis]:
                     indices = [self._grid[axis].searchsorted(ind) for ind in selections[axis]['values']]
                 avg = np.take(avg,indices,axis=axis_ind)
-
+            
             for axis in axes_names:
                 axis_ind = self._axis_names.index(axis)
                 avg = np.nanmean(avg,axis=axis_ind,keepdims=True)
             res[key] = avg
+        
+        return res[keys[0]] if len(keys) == 1 else res
 
-        return res
+    def create_mask(self,param,lats_in,lons_in,**kwargs):
+
+        data = np.squeeze(self.axis_avg(keys=[param],**kwargs))
+        print(data.shape)
+
+        mask = np.zeros((len(lats_in),len(lons_in)),dtype=bool)
+
+        map_lat = [search_index(self.get_grid('lats'),lat) for lat in lats_in]
+        map_lon = [search_index(self.get_grid('lons'),lon) for lon in lons_in]
+
+        for i in range(len(lats_in)):
+            for j in range(len(lons_in)):
+                ilat, ilon = map_lat[i], map_lon[j]
+                if np.isnan(data[ilat][ilon]):  
+                    mask[i][j] = True
+
+        return mask
 
     def plot_grid(self,data=None,param=None,selections={},ax=None,cbounds=None,cmap='Reds',colorbar=True,mask=None,key2=None,cax=None,**kwargs):
 
@@ -43,7 +64,7 @@ class GridData(Data,GridInfo):
 
         norm = mcolors.BoundaryNorm(cbounds, ncolors=256) if cbounds else None
 
-        if not ax: fig, ax = plt.subplots(figsize=(10,4),subplot_kw={'projection': ccrs.PlateCarree()})
+        if ax==None: fig, ax = plt.subplots(figsize=(10,4),subplot_kw={'projection': ccrs.PlateCarree()})
         
         x = self.get_grid('lons')
         y = self.get_grid('lats')
@@ -51,26 +72,26 @@ class GridData(Data,GridInfo):
             data = self.axis_avg(axes_names=[axis 
                                             for axis in self._axis_names 
                                             if axis not in ['lats','lons']],
-                                            selections=selections)[param]
+                                            selections=selections,
+                                            keys=[param])
         data = np.squeeze(data)
-        print(data.shape)
 
         # if key2:
         #     data = data-self.get_data()[key2][z]
 
-        # if type(mask) == np.ndarray: 
-        #     data = np.ma.array(data, mask = mask)
-        #     print(data.shape,mask.shape)       
+        if type(mask) == np.ndarray: 
+            data = np.ma.array(data, mask = mask)
+            # print(data.shape,mask.shape)       
 
         ax.coastlines()
         ax.set_xticks(np.linspace(-180, 180, 5), crs=projection)
         ax.set_yticks(np.linspace(-90, 90, 5), crs=projection)
 
-        # ax_settings = {
-        #     'xlim': [-180,180],
-        #     'ylim':[-90,90]
-        # }
-        # ax_set(ax,**ax_settings,**kwargs)
+        ax_settings = {
+            'xlim': [-180,180],
+            'ylim':[-90,90]
+        }
+        ax_set(ax,**ax_settings,**kwargs)
 
         pcm=ax.pcolormesh(x,y,data,cmap=cmap,norm=norm)
 
@@ -79,7 +100,7 @@ class GridData(Data,GridInfo):
 
         return ax
 
-    def get_values_region(self,region_ranges=None):
+    def get_values_region(self,region_ranges=None,mask=None):
         """
         Return a list of tuples of values at each grid point within the specified region
         
@@ -108,15 +129,17 @@ class GridData(Data,GridInfo):
             
             ranges_ind[dim] = bound_to_index(self._grid[dim],bounds)
 
-        #     if 'satellite' in self._axis_names:
-        #         print(dim,ranges_ind[dim])
-        #         print(bounds,self._grid[dim][ranges_ind[dim]])
-        # print(ranges_ind)
+        if type(mask) == np.ndarray: 
+           # Mask should be same shape as _data!! 
+           # May be useful:
+           # np.broadcast_to
+           data = np.ma.array(data, mask = mask)
 
         values = {}
         for key in self._data:
             indices = []
             for dim in self._axis_names:
+            
                 if dim in ranges_ind:
                     region_ranges = ranges_ind[dim]
                     for bounds in region_ranges:                    

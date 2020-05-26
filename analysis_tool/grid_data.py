@@ -57,17 +57,17 @@ class GridData(Data,GridInfo):
 
         return mask
 
-    def plot_grid(self,data=None,param=None,selections={},ax=None,cbounds=None,cmap='Reds',colorbar=True,mask=None,key2=None,cax=None,**kwargs):
+    def plot_grid(self,param=None,data=None,selections={},ax=None,cbounds=None,cmap='Reds',colorbar=True,mask=None,key2=None,cax=None,**kwargs):
 
         projection = ccrs.PlateCarree()
 
         norm = mcolors.BoundaryNorm(cbounds, ncolors=256) if cbounds else None
 
         if ax==None: fig, ax = plt.subplots(figsize=(10,4),subplot_kw={'projection': ccrs.PlateCarree()})
-        
         x = self.get_grid('lons')
         y = self.get_grid('lats')
         if not data:        
+            
             data = self.axis_avg(axes_names=[axis 
                                             for axis in self._axis_names 
                                             if axis not in ['lats','lons']],
@@ -85,7 +85,7 @@ class GridData(Data,GridInfo):
             'ylim':[-90,90]
         }
         ax_set(ax,**ax_settings,**kwargs)
-
+        
         pcm=ax.pcolormesh(x,y,data,cmap=cmap,norm=norm)
 
         if colorbar: 
@@ -93,23 +93,36 @@ class GridData(Data,GridInfo):
 
         return ax
 
-    def get_values_region(self, region_ranges=None,keys=[],mask=None):
-        """
-        Return a list of tuples of values at each grid point within the specified region
+    def plot_mean1d(self,param='aod',axis_name='lats',ax=None,label=None,selections={},color='k',**kwargs):
+        axes_names = [name for name in self._axis_names if name != axis_name]
+        data = np.squeeze(self.axis_avg(keys=[param],axes_names=axes_names,selections=selections))
+
+        if not ax: fig, ax = plt.subplots()
+
+        ax.plot(self._grid[axis_name],data,label=label,color=color)
+        ax_set(ax,**kwargs)
+
+    def plot_scatter_color(self,xname,yname,cname,cdata=None,region_ranges=None,ax=None,vmax=None,vmin=None,norm=None,cmap='gist_rainbow',s=4,colorbar=False,clabel=None,**kwargs):
+
+        if not ax: fig, ax = plt.subplots()
+        data = self.get_values_region(region_ranges=region_ranges,keys=[xname,yname,cname])
         
-        Variables:
-        - region_ranges: Dict which specifies the ranges in each dim
-          e.g. {'lons':[0,100], 'lats':[0,60]}
+        if type(cdata) == type(None):
+            cdata = data[cname]
 
-        """
-        if not keys: keys = self._data.keys()
-        if not region_ranges:
-            values = {}
-            for key in keys:
-                data = np.ma.array(self._data[key],mask=mask)
-                values[key] = data[data.mask==False].data
-            return pd.DataFrame(values,columns=keys)
+        vmax = vmax or cdata.max()
+        vmin = vmin or cdata.min()
+        pcm = ax.scatter(data[xname],data[yname],c=cdata,vmin=vmin,vmax=vmax,cmap=cmap,s=s,norm=norm)
 
+        ax_set(ax,legend=False,**kwargs)
+        if colorbar: 
+            cbar = plt.colorbar(pcm,ax=ax,extend='both')
+            if clabel:cbar.set_label(clabel,rotation=270,labelpad=20)         
+
+
+        return pcm
+
+    def get_region_index_array(self,region_ranges):
         ranges_ind = {}
         for dim in region_ranges:
             if dim == 'lons': # Convert the region_ranges if needed
@@ -126,42 +139,70 @@ class GridData(Data,GridInfo):
             
             ranges_ind[dim] = bound_to_index(self._grid[dim],bounds)
 
-        values = {}
-        for key in keys:
-            indices = []
-            for dim in self._axis_names:            
-                if dim in ranges_ind:
-                    region_ranges = ranges_ind[dim]
-                    for bounds in region_ranges:                    
-                        indices.append([i for i in range(bounds[0],bounds[1])])
-                else:                    
-                    indices.append([i for i in range(self._dims[dim])])
+        indices = []
+        for dim in self._axis_names:            
 
-            index_arrays = np.ix_(*indices)
+            if dim in ranges_ind:
+                region_ranges = ranges_ind[dim]
+                for bounds in region_ranges:            
+                    if bounds[0] != bounds[1]:        
+                        indices.append([i for i in range(bounds[0],bounds[1])])
+                    else:
+                        indices.append([bounds[0]])
+            else:                    
+                indices.append([i for i in range(self._dims[dim])])
+
+        index_arrays = np.ix_(*indices)
+        return index_arrays
+
+    def get_values_region(self, region_ranges=None, keys=[],mask=None):
+        """
+        Return a list of tuples of values at each grid point within the specified region
+        
+        Variables:
+        - region_ranges: Dict which specifies the ranges in each dim
+          e.g. {'lons':[0,100], 'lats':[0,60]}
+
+        """
+        if not keys: keys = [key for key in self._data if len(self._data[key].shape) == len(self._axis_names)]
+
+        if not region_ranges:
+            values = {}
+            for key in keys:
+                data = np.ma.array(self._data[key],mask=mask)
+                values[key] = data[data.mask==False].data
+            return pd.DataFrame(values,columns=keys)
+
+        index_arrays = self.get_region_index_array(region_ranges)
+
+        values = {}
+        for key in keys:            
             data = np.ma.array(self._data[key],mask=mask)[index_arrays]
             values[key] = data[data.mask==False].data        
         
-        return pd.DataFrame(values,columns=self._data.keys())
+        return pd.DataFrame(values,columns=keys)
 
-    def get_fractions(self,groups,region_ranges=None):
+    def get_fractions(self,groups,region_ranges=None,**kwargs):
         '''
         groups: {'AOD':{'tauca':'Carb','taudu':'Dust','tausu':'Sulf','tausa':'Salt'},
                  'mass':{'cmasst':'OC','cmasstbc':'BC','dmasst':'Dust','smasst':'Sulf','samasst':'Salt'}}
         '''
         
-        data = self.get_values_region(region_ranges=region_ranges)
+        data = self.get_values_region(region_ranges=region_ranges,**kwargs)
         total = data.sum()
+
         fractions = {key:total[groups[key].keys()]/total[groups[key].keys()].sum()
                         for key in groups}
 
         return {key:fractions[key].rename(groups[key]) for key in groups}
 
-    def get_fractions_intervals(self,groups,intervals,axis_name,region_ranges={}):
+    def get_fractions_intervals(self,groups,intervals,axis_name,region_ranges={},**kwargs):
         
         data = collections.defaultdict(list)
         for i in range(len(intervals)-1):
+
             bounds = intervals[i:i+2]
-            fractions = self.get_fractions(groups,{axis_name:bounds,**region_ranges})
+            fractions = self.get_fractions(groups,{axis_name:bounds,**region_ranges},**kwargs)
             for key in fractions:
                 data[key].append(fractions[key])
   

@@ -1,11 +1,13 @@
 from grid_data import GridData
-from analysis_utils import dt64_to_dt
+from analysis_utils import dt64_to_dt, ax_set
 
 import os
 import pandas as pd
 import numpy as np
 from pyhdf.SD import SD, SDC
 import datetime
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 month_accum    = [1,32,60,91,121,152,182,213,244,274,305,335]
 # month_accum    = [1,32,60,91,122,153,183,214,245,275,306,336]
@@ -108,13 +110,6 @@ class ModisGridData(GridData):
             hdf.end()
 
         hdf_names[:].apply(read_hdf_file,axis=1)
-    
-    def get_index(self,date,satellite):
-        '''''
-            Find the index of the give date and satellite
-        '''''
-        print(date,satellite) 
-        return 0,0
 
     def read_hdf_names(self,hdf_namelist,time_range,satellites):
         print('Reading hdf names from', hdf_namelist)
@@ -150,24 +145,62 @@ class ModisGridData(GridData):
         self._data = self.axis_avg(['satellite'])
         self.set_grid('satellite',['average'])
 
-    def joint_hist_avg(self,param,by=None,inplace=True):
+    def combine_data(self,data_names,new_data_name):
+        '''''
+            Fill the nan in data_names[0] with the values in data_names[1]
+            e.g. ['alfa_ocean','alfa_land'], ['alfa']
+        '''''
+
+        data = self._data[data_names[0]].copy()
+        nan_ind = np.isnan(data)
+        data[nan_ind] = self._data[data_names[1]][nan_ind]
+        self._data[new_data_name] = data
+
+    def joint_hist_avg(self,param,by=None,new_data_name=None):
         # by = 'ae_centers'
+        if not new_data_name: new_data_name = param
         if not by: 
             by = list(self._hist_axes[param].keys())[-1]
             ind = -1
         else:
             ind = list(self._hist_axes[param].keys()).index(by) -2
         centers = self._hist_axes[param][by]['centers']
-        print('by = ', by, ind)
+
         data = np.moveaxis(self._data[param], ind,-1)
 
         counts = np.nansum(data,axis=(-2,-1))
         result = np.nansum(data*centers,axis=(-2,-1))/counts
 
-        if inplace:
-            self._data[param] = result
-        else:
-            return result
+        self._data[new_data_name] = result
+
+    def get_region_hist(self,param,region_ranges,density=True):
+        index_arrays = self.get_region_index_array(region_ranges)
+        data = self._data[param][index_arrays]
+        axes = tuple([i for i in range(len(self._axis_names))])
+        hist = np.nansum(data,axis=axes)
+        if density: hist = hist/np.nansum(hist)
+        return hist
+
+    def plot_hist(self,param,region_ranges,xname,yname,density=True,bounds=None,ax=None,cmap='Reds',colorbar=True,**kwargs):
+        
+        data = self.get_region_hist(param,region_ranges,density)
+
+        x_centers = self._hist_axes[param][xname]['centers']
+        y_centers = self._hist_axes[param][yname]['centers']
+
+        if data.shape != (len(y_centers),len(x_centers)):
+            data = data.T
+
+        if not ax: fig, ax = plt.subplots()
+        norm = mcolors.BoundaryNorm(bounds, ncolors=256) if bounds else None
+
+        pcm = ax.pcolormesh(x_centers,y_centers,data,cmap=cmap,norm=norm)
+        if colorbar: plt.colorbar(pcm,ax=ax,extend='both')
+
+        ax_set(ax,legend=False,**kwargs)
+        return pcm
+
+
 
 
 

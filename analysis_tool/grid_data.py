@@ -1,5 +1,6 @@
 from base_data import Data
 from grid_info import GridInfo
+from point_data import PointData
 from analysis_utils import bound_to_index, lon360, lon180, ax_set,search_index
 import pandas as pd
 import numpy as np
@@ -182,6 +183,24 @@ class GridData(Data,GridInfo):
         
         return pd.DataFrame(values,columns=keys)
 
+    def get_point_data(self,lat,lon,**kwargs):
+        return self.get_values_region({'lats':[lat-0.01,lat+0.01],'lons':[lon-0.01,lon+0.01]},**kwargs)
+
+    def generate_point_data(self,site_info,lat_name='Latitude',lon_name='Longitude',**kwargs):
+        point_data = PointData()
+        point_data.set_site_info(site_info)
+        for site in site_info.index:
+            print('Generate data at ', site)
+            lat = site_info.loc[site,lat_name]
+            lon = site_info.loc[site,lon_name]
+            data = self.get_point_data(lat,lon,**kwargs)
+            data['Site name'] = site
+            point_data._all_data = point_data._all_data.append(data)
+
+        point_data._all_data = point_data._all_data.reset_index().rename(columns={'index':'time_index'})
+
+        return point_data
+
     def get_fractions(self,groups,region_ranges=None,**kwargs):
         '''
         groups: {'AOD':{'tauca':'Carb','taudu':'Dust','tausu':'Sulf','tausa':'Salt'},
@@ -207,3 +226,4 @@ class GridData(Data,GridInfo):
                 data[key].append(fractions[key])
   
         return {key:pd.DataFrame(data[key]) for key in data}
+

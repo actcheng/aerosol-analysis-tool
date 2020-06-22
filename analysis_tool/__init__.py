@@ -27,6 +27,9 @@ from point_avg import PointAvg
 from point_hist import PointHist
 from point_size_dist import PointSizeDist
 
+# 
+from point_data_joint import PointDataJoint
+
 ## Zonal data
 from model_zonal_data import ModelZonalData
 

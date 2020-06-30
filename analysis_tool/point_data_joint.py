@@ -33,6 +33,9 @@ class PointDataJoint(Data):
     def all_data(self,all_data):
         self._all_data = all_data
 
+    def site_data(self,site_name,col_name='Site name'):
+        return self._all_data[self.all_data[col_name]==site_name]
+
     def join_point_data(self,point_data,on=['Site name','time_index']):
         # Generate list of dataframe
         # Rename columns

@@ -34,12 +34,14 @@
     # Plotting
     - ax_selector
     - ax_set
+    - savefig
 
     # Output tool
     - draw_progress_bar
 """
 import datetime
 import numpy as np
+import matplotlib.pyplot as plt
 
 ## Text and files
 def add_suffix(S,suf):
@@ -90,7 +92,6 @@ def filter_time(df,col='',period=[],year=None,month=None):
         return df
 
 def dt64_to_dt(dt64):  
-
     return np.datetime64( dt64, 'us').astype(datetime.datetime)
 
 
@@ -246,6 +247,10 @@ def ax_set(ax,
         full = add_suffix(savedir,'/') + savename.lower()+'_'+add_suffix(save_suffix.lower().replace(' ','_'),'.png')
         plt.savefig(full,dpi=200)
         print(f'Saved as {full}')
+
+def savefig(savename,dpi=200,**kwargs):
+    plt.savefig(savename,dpi=200,**kwargs)
+    print(f'Saved as {savename}')
 
 ## Output tool
 def draw_progress_bar(percent, show_progress=True, bar_len = 50):

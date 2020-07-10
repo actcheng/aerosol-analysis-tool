@@ -67,7 +67,7 @@ class GridData(Data,GridInfo):
         if ax==None: fig, ax = plt.subplots(figsize=(10,4),subplot_kw={'projection': ccrs.PlateCarree()})
         x = self.get_grid('lons')
         y = self.get_grid('lats')
-        if not data:        
+        if data is None:        
             
             data = self.axis_avg(axes_names=[axis 
                                             for axis in self._axis_names 

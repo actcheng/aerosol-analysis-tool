@@ -67,15 +67,24 @@ class GridData(Data,GridInfo):
         if ax==None: fig, ax = plt.subplots(figsize=(10,4),subplot_kw={'projection': ccrs.PlateCarree()})
         x = self.get_grid('lons')
         y = self.get_grid('lats')
+        axes_names = [axis 
+                        for axis in self._axis_names 
+                        if axis not in ['lats','lons']]
         if data is None:        
             
-            data = self.axis_avg(axes_names=[axis 
-                                            for axis in self._axis_names 
-                                            if axis not in ['lats','lons']],
+            data = self.axis_avg(axes_names=axes_names ,
                                             selections=selections,
                                             keys=[param],
                                   mask=mask)
         data = np.squeeze(data)   
+        print('data',data.shape,param)
+
+        if key2 is not None:
+            data2 = self.axis_avg(axes_names=axes_names ,
+                                  selections=selections,
+                                  keys=[key2],
+                                  mask=mask) 
+            data = data - np.squeeze(data2)
 
         ax.coastlines()
         ax.set_xticks(np.linspace(-180, 180, 5), crs=projection)

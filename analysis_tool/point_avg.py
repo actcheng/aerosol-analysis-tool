@@ -2,6 +2,7 @@ from analysis_utils import ax_selector, ax_set, cal_bias
 from base_data import Data
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 '''''
@@ -36,7 +37,12 @@ class PointAvg(Data):
 
     def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,bias_log=True,xlim=[0,1],ylim=[0,1],colors=['r'],marker='o',label=None,same_fig=True,ax=None,save_suffix=None,**kwargs):
 
-        corr = self._avg_data[model_labels+obs_labels].corr()
+        if bias_log:
+            corr = np.log10(self._avg_data[model_labels+obs_labels]).corr()
+            print('log')
+        else:
+            corr = self._avg_data[model_labels+obs_labels].corr()
+
         ncols=len(model_labels)
         nrows=len(obs_labels)
         if not axes: 

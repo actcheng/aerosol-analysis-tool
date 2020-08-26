@@ -126,7 +126,7 @@ class ModelFluxData(Data):
         
     def read_aave(self,grads_names,
                   lons=[-180,180],lats=[-90,90],
-                  time=3600*35*365,check='check',op='',
+                  time=3600*24*365,check='check',op='',
                   screen_negative=True,**kwargs): 
         
         area = grid_area(lats,lons)

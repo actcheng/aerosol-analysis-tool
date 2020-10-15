@@ -169,7 +169,8 @@ class ModelGridData(GridData):
                        styles={},
                        xscale='linear',
                        yscale='linear', ylabel='Relative frequency',
-                       ax=None,**kwargs):
+                       ax=None,label=None,
+                       **kwargs):
 
         ax_settings = {'xscale': xscale, 
                        'yscale': yscale, 'ylabel':ylabel,
@@ -178,13 +179,12 @@ class ModelGridData(GridData):
         if type(zlist) != list: zlist = [zlist]
         if not ax: fig, ax = plt.subplots()
         centers = [(bins[i+1]+bins[i])/2 for i in range(len(bins)-1)]
-        
         for z in zlist:
             h = self._grid['zlevs'][z-1]
             data = self.get_data()[param][self.get_zid(z)].flatten()
             counts, _ = np.histogram(data,bins=bins,density=True)
-            ax.plot(centers,counts,label=f'{int(h/10)/100} km',**styles)
-
+            ax.plot(centers,counts,label=label or f'{int(h/10)/100} km',**styles)
+        
         print('Total counts: ',len(data))
 
         ax_set(ax,**ax_settings,**kwargs)

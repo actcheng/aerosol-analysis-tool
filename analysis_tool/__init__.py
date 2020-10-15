@@ -11,6 +11,7 @@ import size_utils
 import grads_wrapper
 
 ## Point data
+from point_data import PointData
 from improve_data import ImproveData
 from nas_data import NasData
 from aeronet_data import AeronetData
@@ -42,6 +43,9 @@ from modis_grid_data import ModisGridData
 ## Flux data
 from model_flux_data import ModelFluxData
 from model_flux_size_data import ModelFluxSizeData
+
+## Sensitivity tests
+from model_grid_data_compare import ModelGridDataCompare
 
 ## Plotting helpers
 from plot_2var import Plot2Var

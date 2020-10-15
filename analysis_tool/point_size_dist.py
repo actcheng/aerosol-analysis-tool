@@ -54,8 +54,10 @@ class PointSizeDist(GroupData):
                     xscale='log',
                     xlabel='Diameter (${\mu}$m)',
                     ylabel='dV/dlnr',
+                    with_label=True,
                     count_key='',
                     close=False,
+                    ax_in=None,
                     **kwargs):
 
         if len(sites)==0: sites = self._groupnames
@@ -63,17 +65,25 @@ class PointSizeDist(GroupData):
         
         for i,site in enumerate(sites):
             counts = 0
-            fig,ax = plt.subplots()
+            if ax_in is None: 
+                fig,ax = plt.subplots()
+            else:
+                ax = ax_in
             
             for key in self._keys:
-                thresh = len(self._groupbys[key].get_group(site).columns) - self._bin_num[key] +1         
-                group = self._groupbys[key].get_group(site).dropna(thresh=thresh)
+                try:
+                    thresh = len(self._groupbys[key].get_group(site).columns) - self._bin_num[key] +1         
+                    group = self._groupbys[key].get_group(site).dropna(thresh=thresh)
+                except:
+                    print("Cannot get group at site: ", site, key)
+                    group = None
+                if group is None: continue
                 centers = self.pick_bin_centers(key,group)
-                
                 if key == count_key: 
                     counts = len(group)
                 data =  list(group.mean()[self._size_col[key]])
-                ax.plot(centers,data,label=key,**self._styles[key])
+                # ax.plot(centers,data,label=key if label_in else None,**self._styles[key])
+                ax.plot(centers,data,label=site,**self._styles[key])
             
             ax_settings['title'] = f'{site}: (N={counts})' if counts>0 else site
             ax_settings['save_suffix'] = site            

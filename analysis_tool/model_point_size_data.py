@@ -17,7 +17,8 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
         TypeSizeInfo.__init__(self,'Total','tt','bin',
                               bin_num=bin_num,bin_range=bin_range,**kwargs)
 
-        self.type_info = type_info_list and {t.aerosol_name: t for t in type_info_list} 
+        if type_info_list is not None:
+            self.type_info = type_info_list 
 
     @property
     def type_info(self):

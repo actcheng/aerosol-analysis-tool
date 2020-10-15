@@ -65,13 +65,15 @@ class ModelZonalData(GridData):
         self._data = all_data
         return 
 
-    def plot_vertical_meridional(self,key,bounds=None,cmap='Reds',title=None,ax=None,colorbar=True,key2=None,**kwargs):
+    def plot_vertical_meridional(self,key,data=None,bounds=None,cmap='Reds',title=None,ax=None,colorbar=True,key2=None,**kwargs):
 
         norm = mcolors.BoundaryNorm(bounds, ncolors=256) if bounds else None
 
         if not ax: fig, ax = plt.subplots()
-        data = self._data[key]
-        if key2: data = self._data[key2]-data
+        if data is None:
+            data = self._data[key]
+            if key2: data = self._data[key2]-data
+            
         pcm=ax.pcolormesh(self._grid['lats'],self._grid['zlevs']/1000,data,cmap=cmap,norm=norm)
         if colorbar: plt.colorbar(pcm,ax=ax)
         # plt.xticks()

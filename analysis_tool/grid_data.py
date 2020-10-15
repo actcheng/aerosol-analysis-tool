@@ -18,6 +18,9 @@ class GridData(Data,GridInfo):
         GridInfo.__init__(self)  
         self._data = {}
 
+    def set_data(self,data):
+        self._data = data
+
     def axis_avg(self,axes_names=['time'],mask=None,keys=None,selections={}):
         res = {}
         if not keys: keys=self._data.keys()
@@ -58,7 +61,7 @@ class GridData(Data,GridInfo):
 
         return mask
 
-    def plot_grid(self,param=None,data=None,selections={},ax=None,cbounds=None,cmap='Reds',colorbar=True,mask=None,key2=None,cax=None,**kwargs):
+    def plot_grid(self,param=None,data=None,selections={},ax=None,cbounds=None,cmap='Reds',colorbar=True,cbextend="max",mask=None,key2=None,cax=None,scale_factor=1,**kwargs):
 
         projection = ccrs.PlateCarree()
 
@@ -76,7 +79,7 @@ class GridData(Data,GridInfo):
                                             selections=selections,
                                             keys=[param],
                                   mask=mask)
-        data = np.squeeze(data)   
+        data = np.squeeze(data)*scale_factor   
         print('data',data.shape,param)
 
         if key2 is not None:
@@ -91,25 +94,28 @@ class GridData(Data,GridInfo):
         ax.set_yticks(np.linspace(-90, 90, 5), crs=projection)
 
         ax_settings = {
-            'xlim': [-180,180],
-            'ylim':[-90,90]
+            'xlim': [-179,179],
+            'ylim':[-89,89],
+            # 'xlim': [-180,180],
+            # 'ylim':[-90,90],
+            'legend': False
         }
         ax_set(ax,**ax_settings,**kwargs)
         
         pcm=ax.pcolormesh(x,y,data,cmap=cmap,norm=norm)
 
         if colorbar: 
-            cb = plt.colorbar(pcm,ax=ax,extend='max')           
+            cb = plt.colorbar(pcm,ax=ax,extend=cbextend)           
 
         return ax
 
-    def plot_mean1d(self,param='aod',axis_name='lats',ax=None,label=None,selections={},color='k',**kwargs):
+    def plot_mean1d(self,param='aod',axis_name='lats',ax=None,label=None,selections={},color='k',linestyle='-',**kwargs):
         axes_names = [name for name in self._axis_names if name != axis_name]
         data = np.squeeze(self.axis_avg(keys=[param],axes_names=axes_names,selections=selections))
 
         if not ax: fig, ax = plt.subplots()
 
-        ax.plot(self._grid[axis_name],data,label=label,color=color)
+        ax.plot(self._grid[axis_name],data,label=label,color=color,linestyle=linestyle)
         ax_set(ax,**kwargs)
 
     def plot_scatter_color(self,xname,yname,cname,cdata=None,region_ranges=None,ax=None,vmax=None,vmin=None,norm=None,cmap='gist_rainbow',s=4,colorbar=False,clabel=None,**kwargs):
@@ -127,7 +133,7 @@ class GridData(Data,GridInfo):
         ax_set(ax,legend=False,**kwargs)
         if colorbar: 
             cbar = plt.colorbar(pcm,ax=ax,extend='both')
-            if clabel:cbar.set_label(clabel,rotation=270,labelpad=20)         
+            if clabel:cbar.set_label(clabel,rotation=270,labelpad=20)        
 
 
         return pcm

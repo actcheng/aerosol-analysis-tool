@@ -50,7 +50,7 @@ class ModelZonalData(GridData):
 
                 for i,z in enumerate(range(zrange[0],zrange[1]+1)):
                     ga.zlevel(z)
-                    data[i] += np.nanmean(ga.tave_exp(grads_name,[1,2],**kwargs),axis=1)*(trange[1]-trange[0]+1)/ttotal
+                    data[i] += np.nanmean(ga.tave_exp(grads_name,trange,**kwargs),axis=1)*(trange[1]-trange[0]+1)/ttotal
             
                     processed+=1
                     if show_progress: 

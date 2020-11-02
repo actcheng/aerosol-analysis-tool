@@ -145,7 +145,9 @@ class ModelGridData(GridData):
                     if i == len(data):
                         data.append(res)
                     else:
-                        data[i] += res
+                        # data[i] += res
+                        data[i] = np.nansum([data[i],res],axis=0)
+                        # print(data[i].shape,res.shape)
 
                     processed+=1
                     if show_progress: 

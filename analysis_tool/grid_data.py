@@ -19,7 +19,14 @@ class GridData(Data,GridInfo):
         self._data = {}
 
     def set_data(self,data):
-        self._data = data
+        self._data = {**self._data, **data}
+
+    def multiply_data(self,left,right,new_name=None):
+        data = np.multiply(self._data[left],self._data[right])
+        if new_name is None: 
+            return data
+        else:
+            self._data[new_name] = data
 
     def axis_avg(self,axes_names=['time'],mask=None,keys=None,selections={}):
         res = {}
@@ -38,8 +45,9 @@ class GridData(Data,GridInfo):
                 avg = np.take(avg,indices,axis=axis_ind)
             
             for axis in axes_names:
-                axis_ind = self._axis_names.index(axis)
-                avg = np.nanmean(avg,axis=axis_ind,keepdims=True)
+                if axis in self._axis_names:
+                    axis_ind = self._axis_names.index(axis)
+                    avg = np.nanmean(avg,axis=axis_ind,keepdims=True)
             res[key] = avg
         
         return res[keys[0]] if len(keys) == 1 else res

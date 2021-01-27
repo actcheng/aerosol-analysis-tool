@@ -35,7 +35,7 @@ class PointAvg(Data):
     def get_sites(self):
         return list(self._avg_data.index.get_level_values('Site name').unique())
 
-    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,bias_log=True,xlim=[0,1],ylim=[0,1],colors=['r'],marker='o',label=None,same_fig=True,ax=None,save_suffix=None,**kwargs):
+    def plot_scatter(self,model_labels,obs_labels,axes=None,model_err=None,obs_err=None,bias_log=True,xlim=[0,1],ylim=[0,1],colors=['r'],marker='o',label_in=None,same_fig=True,ax=None,save_suffix=None,**kwargs):
 
         if bias_log:
             corr = np.log10(self._avg_data[model_labels+obs_labels]).corr()
@@ -54,12 +54,14 @@ class PointAvg(Data):
         for i in range(nrows):
             for j in range(ncols):
                 if same_fig: 
-                    label = label or model_labels[j].split(':')[0]
+                    label = label_in or model_labels[j].split(':')[0]
                     color=colors[j]
                 else:
                     ax = ax_selector(axes,i,j,nrows,ncols)
                     color = colors[0]
                 self._avg_data.plot.scatter(obs_labels[i],model_labels[j],marker=marker,ax=ax,c=color,label=label)
+                print(model_labels[j],len(self._avg_data[model_labels[j]].dropna()))
+
                 if model_err or obs_err:
                     plt.errorbar(obs_labels[i],model_labels[j],xerr=obs_err[j],data=self._avg_data,fmt="none",color=color,label=None)
 

@@ -160,12 +160,10 @@ class GridData(Data,GridInfo):
             
             else:
                 bounds = region_ranges[dim]
-            
             ranges_ind[dim] = bound_to_index(self._grid[dim],bounds)
 
         indices = []
         for dim in self._axis_names:            
-
             if dim in ranges_ind:
                 region_ranges = ranges_ind[dim]
                 for bounds in region_ranges:            
@@ -200,9 +198,13 @@ class GridData(Data,GridInfo):
         index_arrays = self.get_region_index_array(region_ranges)
 
         values = {}
-        for key in keys:            
-            data = np.ma.array(self._data[key],mask=mask)[index_arrays]
-            values[key] = data[data.mask==False].data        
+        for key in keys:   
+            if mask is not None:          
+                data = np.ma.array(self._data[key],mask=mask)[index_arrays]
+                values[key] = data[data.mask==False].data   
+            else:
+                data = self._data[key][index_arrays] 
+                values[key] = data.flatten() 
         
         return pd.DataFrame(values,columns=keys)
 

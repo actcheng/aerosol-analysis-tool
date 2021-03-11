@@ -50,11 +50,34 @@ class Plot2Var():
         norm = mcolors.BoundaryNorm(bounds, ncolors=256) if bounds else None
 
         n = len(self.data[self.xname])
-        weights = np.ones(n)/n if density else np.ones(n)
+        print('n', n)
+        if n <= 1: 
+            print('No data')
+            return
 
-        pcm = ax.hist2d(self.data[self.xname],self.data[self.yname],bins=[xedges,yedges],weights=weights,cmap=cmap,norm=norm)
+        weights = np.ones(n)/n if density else np.ones(n)
+        try: 
+            pcm = ax.hist2d(self.data[self.xname],self.data[self.yname],bins=[xedges,yedges],weights=weights,cmap=cmap,norm=norm)
+        except:
+            print(self.data.dtypes)
+            print(self.data[self.xname])
+            print(self.data[self.yname])
+            pcm = ax.hist2d(self.data[self.xname],self.data[self.yname],bins=[xedges,yedges],weights=weights,cmap=cmap,norm=norm)
         if colorbar: plt.colorbar(pcm[3],ax=ax,extend='both')
 
         ax_set(ax,legend=False,**kwargs)
         return pcm
+
+    def plot_counts(self,intervals,plot_std=True,color='k',marker='o',ax=None,label=None,**kwargs):
+        groupby = self.data.groupby(pd.cut(self.data[self.xname],intervals))
+        counts = groupby.count()
+        x = pd.IntervalIndex(counts.index).mid
+        y = counts[self.yname]
+        
+        if not ax: fig, ax = plt.subplots()
+
+        ax.plot(x,y,color=color,label=label)
+
+        ax_set(ax,**kwargs)
+        return 
 

@@ -161,14 +161,15 @@ class GridData(Data,GridInfo):
             else:
                 bounds = region_ranges[dim]
             ranges_ind[dim] = bound_to_index(self._grid[dim],bounds)
-
+        
+        print(ranges_ind)
         indices = []
         for dim in self._axis_names:            
             if dim in ranges_ind:
                 region_ranges = ranges_ind[dim]
                 for bounds in region_ranges:            
                     if bounds[0] != bounds[1]:        
-                        indices.append([i for i in range(bounds[0],bounds[1])])
+                        indices.append([i for i in range(bounds[0],bounds[1]+1)])
                     else:
                         indices.append([bounds[0]])
             else:                    
@@ -200,6 +201,7 @@ class GridData(Data,GridInfo):
         values = {}
         for key in keys:   
             if mask is not None:          
+                print(self._data[key].shape,mask.shape)
                 data = np.ma.array(self._data[key],mask=mask)[index_arrays]
                 values[key] = data[data.mask==False].data   
             else:

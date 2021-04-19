@@ -113,7 +113,7 @@ class GridData(Data,GridInfo):
         pcm=ax.pcolormesh(x,y,data,cmap=cmap,norm=norm)
 
         if colorbar: 
-            cb = plt.colorbar(pcm,ax=ax,extend=cbextend)           
+            _ = plt.colorbar(pcm,ax=ax,extend=cbextend)           
 
         return ax
 

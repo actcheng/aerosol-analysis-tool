@@ -120,27 +120,28 @@ class ModisGridData(GridData):
 
         data = []
         for hdf_name in hdf_names:
-            date, satellite = self.info_from_hdf_name(hdf_name)
-            if (not time_range or time_range[0] < date < time_range[1]) and  satellite in satellites:
+            date, satellite = self.info_from_hdf_name(hdf_name,start_date=time_range[0])
+            if (not time_range or time_range[0] <= date <= time_range[1]) and  satellite in satellites:
                 data.append({'satellite':satellite,
                                      'date':date,
                                      'hdf_name':hdf_name})
-
         return pd.DataFrame(data)
     
-    def info_from_hdf_name(self,hdf_name):
+    def info_from_hdf_name(self,hdf_name,start_date=None):
         data = hdf_name.split('.')
         satellite = satellite_codes[data[0][:3]]
         year, days = int(data[1][1:5]), int(data[1][-3:])
 
-        try: 
-            month = month_accum.index(days) + 1 
-        except:
-            print('Month not find! days = ', days)
-            month = 1
-
-        return datetime.datetime(year,month,15), satellite        
-
+        # try: 
+        #     month = month_accum.index(days) + 1 
+        #     return datetime.datetime(year,month,15), satellite   
+        # except:
+        # print('Month not find! days = ', days)
+        date = start_date + datetime.timedelta(days=days - 1) 
+        return date, satellite   
+             
+        
+        
     def combine_satellites(self):
         self._data = self.axis_avg(['satellite'])
         self.set_grid('satellite',['average'])

@@ -127,9 +127,9 @@ class ModelPointData(PointData):
                     processed+=1
                     if show_progress: 
                         draw_progress_bar(processed/data_num)
-                    else:
-                        print(f'Finished reading {processed}/{data_num}')
-                        sys.stdout.flush()
+                    # else:
+                    #     print(f'Finished reading {processed}/{data_num}')
+                    #     sys.stdout.flush()
                 ga.close()
 
         self._avg_data = df_avg 

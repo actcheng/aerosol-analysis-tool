@@ -85,10 +85,10 @@ class PointSizeDist(GroupData):
                 # ax.plot(centers,data,label=key if label_in else None,**self._styles[key])
                 ax.plot(centers,data,label=site,**self._styles[key])
             
-            ax_settings['title'] = f'{site}: (N={counts})' if counts>0 else site
-            ax_settings['save_suffix'] = site            
-            ax_set(ax,**ax_settings,**kwargs)
-            if close: plt.close()
+            # ax_settings['title'] = f'{site}: (N={counts})' if counts>0 else site
+            # ax_settings['save_suffix'] = site            
+            # ax_set(ax,**ax_settings,**kwargs)
+            # if close: plt.close()
 
 
 

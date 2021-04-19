@@ -33,18 +33,19 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
                                  cal_centers_from_num=False,
                                  to_dlnr=False,
                                  to_dlogr=False,
+                                 show_progress=True,
                                  *args, **kwargs):
 
         df_avg = self._site_info.copy()
 
         for key in self._type_info:
             t = self._type_info[key]
-            print(f'\nRead {t.aerosol_name} data')
+            if show_progress: print(f'\nRead {t.aerosol_name} data')
             if type == 'median':
                 start_dates = [datetime.datetime.now()] # Dummy
                 avg = self.get_grads_median(grads_dir,[t.var_name],start_dates,zrange=[1,t.bin_num],**kwargs)
             else:
-                avg = self.get_grads_avg(grads_dir,[t.var_name],*args,zrange=[1,t.bin_num],**kwargs) 
+                avg = self.get_grads_avg(grads_dir,[t.var_name],*args,zrange=[1,t.bin_num],show_progress=show_progress,**kwargs) 
 
             if cal_centers_from_num:
                 avg_num = self.get_grads_avg(grads_dir,[t.var_num_name],*args,zrange=[1,t.bin_num],**kwargs)

@@ -104,8 +104,11 @@ def columns_first(df,cols_f):
 
 ## GrADS
 def ga_open_file(ga,grads_dir,grads_name,check,i,file_suffixes,time_ranges):
+
     if len(time_ranges) > 1:
-        if file_suffixes:
+        if type(grads_dir) == list:
+            ga.open(f'{grads_dir[i]}/{check}',grads_name)
+        elif file_suffixes:
             ga.open(f'{grads_dir}_{file_suffixes[i]}/{check}',grads_name)
         else:
             ga.open(f'{grads_dir}_{i+1}/{check}',grads_name)

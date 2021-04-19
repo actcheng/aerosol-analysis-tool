@@ -37,7 +37,7 @@ class Plot2Var():
         if not ax: fig, ax = plt.subplots()
 
         ax.scatter(x,y,color=color,marker=marker,label=label)
-        if plot_std:
+        if plot_std is True:
             yerr = groupby.std()[self.yname]
             ax.errorbar(x,y,yerr=yerr,ls='none',color=color)
         

@@ -252,7 +252,7 @@ def ax_set(ax,
         print(f'Saved as {full}')
 
 def savefig(savename,dpi=200,**kwargs):
-    plt.savefig(savename,dpi=200,**kwargs)
+    plt.savefig(savename,dpi=dpi,**kwargs)
     print(f'Saved as {savename}')
 
 ## Output tool

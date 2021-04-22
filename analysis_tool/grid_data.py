@@ -87,7 +87,7 @@ class GridData(Data,GridInfo):
                                             selections=selections,
                                             keys=[param],
                                   mask=mask)
-        data = np.squeeze(data)*scale_factor   
+        data = np.squeeze(data) #*scale_factor   
         print('data',data.shape,param)
 
         if key2 is not None:

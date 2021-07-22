@@ -5,7 +5,7 @@ from analysis_utils import bound_to_index, lon360, lon180, ax_set,search_index
 import pandas as pd
 import numpy as np
 import collections
-
+import sys 
 import matplotlib.pyplot as plt 
 import matplotlib.colors as mcolors
 import matplotlib as mpl
@@ -21,6 +21,13 @@ class GridData(Data,GridInfo):
     def set_data(self,data):
         self._data = {**self._data, **data}
 
+    def append_data(self,data,key,axis=3):
+        ''' Append data over specified axis (Default: time axis)'''
+        print(key)
+        print(self._data[key].shape,data.shape)
+        self._data[key] = np.append(self._data[key],data,axis=axis)
+        print(self._data[key].shape)
+
     def multiply_data(self,left,right,new_name=None):
         data = np.multiply(self._data[left],self._data[right])
         if new_name is None: 
@@ -30,25 +37,35 @@ class GridData(Data,GridInfo):
 
     def axis_avg(self,axes_names=['time'],mask=None,keys=None,selections={}):
         res = {}
+        print('axis_avg')
+        sys.stdout.flush()
         if not keys: keys=self._data.keys()
-
         for key in keys:
-            avg=np.ma.array(self._data[key].copy(), mask=mask)
-            
-            for axis in selections:
-                axis_ind = self._axis_names.index(axis)
+            if len(selections) == 0:
+                if len(self._data[key].shape) > 3:
+                    avg = np.nanmean(self._data[key],axis=3,keepdims=True)  #ad-hoc
+                else:
+                    avg = self._data[key]
+                print(avg.shape)
+                sys.stdout.flush()
+            # else:
+                # avg=np.ma.array(self._data[key].copy(), mask=mask)
+                
+                # for axis in selections:
+                #     axis_ind = self._axis_names.index(axis)
 
-                if 'indices' in selections[axis]:
-                    indices = selections[axis]['indices']
-                elif 'values' in selections[axis]:
-                    indices = [self._grid[axis].searchsorted(ind) for ind in selections[axis]['values']]
-                avg = np.take(avg,indices,axis=axis_ind)
-            
-            for axis in axes_names:
-                if axis in self._axis_names:
-                    axis_ind = self._axis_names.index(axis)
-                    avg = np.nanmean(avg,axis=axis_ind,keepdims=True)
+                #     if 'indices' in selections[axis]:
+                #         indices = selections[axis]['indices']
+                #     elif 'values' in selections[axis]:
+                #         indices = [self._grid[axis].searchsorted(ind) for ind in selections[axis]['values']]
+                #     avg = np.take(avg,indices,axis=axis_ind)
+                
+                # for axis in axes_names:
+                #     if axis in self._axis_names:
+                #         axis_ind = self._axis_names.index(axis)
+                #         avg = np.nanmean(avg,axis=axis_ind,keepdims=True)
             res[key] = avg
+            print('Completed',key)
         
         return res[keys[0]] if len(keys) == 1 else res
 
@@ -82,14 +99,13 @@ class GridData(Data,GridInfo):
                         for axis in self._axis_names 
                         if axis not in ['lats','lons']]
         if data is None:        
-            
             data = self.axis_avg(axes_names=axes_names ,
                                             selections=selections,
                                             keys=[param],
-                                  mask=mask)
-        data = np.squeeze(data) #*scale_factor   
-        print('data',data.shape,param)
-
+                                mask=mask)
+        data = np.squeeze(data)*scale_factor   
+        print('data',data.shape,param,data.max(),data.min())
+        sys.stdout.flush()
         if key2 is not None:
             data2 = self.axis_avg(axes_names=axes_names ,
                                   selections=selections,
@@ -113,9 +129,11 @@ class GridData(Data,GridInfo):
         pcm=ax.pcolormesh(x,y,data,cmap=cmap,norm=norm)
 
         if colorbar: 
-            _ = plt.colorbar(pcm,ax=ax,extend=cbextend)           
+            cbar = plt.colorbar(pcm,ax=ax,extend=cbextend) #,format='%.1e')
 
-        return ax
+            # cbar.formatter.set_powerlimits((0,0))
+
+        return ax, cbar
 
     def plot_mean1d(self,param='aod',axis_name='lats',ax=None,label=None,selections={},color='k',linestyle='-',**kwargs):
         axes_names = [name for name in self._axis_names if name != axis_name]
@@ -190,10 +208,15 @@ class GridData(Data,GridInfo):
         if not keys: keys = [key for key in self._data if len(self._data[key].shape) == len(self._axis_names)]
 
         if not region_ranges:
+            print('No region_ranges')
             values = {}
             for key in keys:
-                data = np.ma.array(self._data[key],mask=mask)
-                values[key] = data[data.mask==False].data
+                print('key: ', key)
+                if mask:
+                    data = np.ma.array(self._data[key],mask=mask)
+                    values[key] = data[data.mask==False].data
+                else: 
+                    values[key] = self._data[key].flatten()
             return pd.DataFrame(values,columns=keys)
 
         index_arrays = self.get_region_index_array(region_ranges)

@@ -24,13 +24,14 @@
     # Statistics
     - remove_outlier
     - cal_bias
+    - gammafunc
 
     # Geolocations
     - lon360
     - lon180
     - grid_area
     - bound_to_index
-    
+
     # Plotting
     - ax_selector
     - ax_set
@@ -42,6 +43,9 @@
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Constants
+LRTP     = 0.9189385332046727
 
 ## Text and files
 def add_suffix(S,suf):
@@ -163,6 +167,21 @@ def cal_bias(obs,model,bias_log=True):
     valid = len(model[~np.isnan(diff)])
     return np.nansum(diff)/valid
 
+def gammafunc(x):
+    dx = x - 1.0
+    Ag = 0.999999999999809932276847004735 \
+       + 676.520368121885098567009190444    / ( dx + 1.0 ) \
+       - 1259.13921672240287047156078755    / ( dx + 2.0 ) \
+       + 771.323428777653078848652825889    / ( dx + 3.0 ) \
+       - 176.615029162140599065845513540    / ( dx + 4.0 ) \
+       + 12.5073432786869048144589368533    / ( dx + 5.0 ) \
+       - 0.138571095265720116895547069851   / ( dx + 6.0 ) \
+       + 9.98436957801957085956266899569E-6 / ( dx + 7.0 ) \
+       + 1.50563273514931155833835577539E-7 / ( dx + 8.0 )
+
+    work = np.exp( LRTP + (dx+0.5)*np.log(dx+7.5) - (dx+7.5) + np.log(Ag) )
+    return np.real(work)
+
 ## Geolocations
 def lon360(lon180):
     return lon180 if lon180 > 0 else lon180 + 360
@@ -220,6 +239,8 @@ def search_index(arr,val):
             l = mid
     return r if arr[l] < val else l
         
+
+
 # Plotting
 def ax_selector(axes,irow,icol,nrows,ncols):
     if nrows==1:

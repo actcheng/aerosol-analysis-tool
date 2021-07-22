@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from pandas.core.base import DataError
 from analysis_utils import ax_set
 import numpy as np
 import matplotlib.colors as mcolors
@@ -44,7 +45,17 @@ class Plot2Var():
         ax_set(ax,**kwargs)
         return 
 
-    def plot_hist(self,xedges,yedges,ax=None,bounds=None,density=True,cmap='Reds',colorbar=True,**kwargs):
+    def get_hist(self,xedges,yedges,ax=None,bounds=None,density=True,cmap='Reds',colorbar=True,scale_factors={},**kwargs):
+        n = len(self.data[self.xname])
+        xsf = scale_factors[self.xname] if self.xname in scale_factors else 1
+        ysf = scale_factors[self.yname] if self.yname in scale_factors else 1
+        weights = np.ones(n)/n if density else np.ones(n)
+
+        data = np.histogram2d(self.data[self.xname]*xsf,self.data[self.yname]*ysf,bins=[xedges,yedges],weights=weights)
+        print(data.shape)
+        return data
+
+    def plot_hist(self,xedges,yedges,ax=None,bounds=None,density=True,cmap='Reds',colorbar=True,scale_factors={},**kwargs):
 
         if not ax: fig, ax = plt.subplots()
         norm = mcolors.BoundaryNorm(bounds, ncolors=256) if bounds else None
@@ -54,10 +65,11 @@ class Plot2Var():
         if n <= 1: 
             print('No data')
             return
-
+        xsf = scale_factors[self.xname] if self.xname in scale_factors else 1
+        ysf = scale_factors[self.yname] if self.yname in scale_factors else 1
         weights = np.ones(n)/n if density else np.ones(n)
         try: 
-            pcm = ax.hist2d(self.data[self.xname],self.data[self.yname],bins=[xedges,yedges],weights=weights,cmap=cmap,norm=norm)
+            pcm = ax.hist2d(self.data[self.xname]*xsf,self.data[self.yname]*ysf,bins=[xedges,yedges],weights=weights,cmap=cmap,norm=norm)
         except:
             print(self.data.dtypes)
             print(self.data[self.xname])

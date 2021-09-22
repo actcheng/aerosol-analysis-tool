@@ -6,6 +6,14 @@ from size_utils import cal_bin_centers
 from type_size_info import TypeSizeInfo
 from model_point_data import ModelPointData
 
+MERGE_COL = ['Site name','Start date']
+SORT_COL = 'Site name'
+def merge(merged, data):
+    if merged is None:
+        return data
+    else:
+        return merged.merge(data,left_index=True,right_index=True, on=MERGE_COL)
+
 class ModelPointSizeData(ModelPointData,TypeSizeInfo):
     """
 
@@ -27,6 +35,28 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
     @type_info.setter
     def type_info(self, type_info_list):
         self._type_info = type_info_list and {t.aerosol_name: t for t in type_info_list}
+
+    def get_grads_all_from_info(self, grads_dir, show_progress=True, cal_total=True, to_dlnr=False,to_dlogr=False,extra_var=[],*args, **kwargs):
+
+        merged = None
+        
+        for var in extra_var:
+            print('Read ', var)
+            all = self.read_grads_all(grads_dir, [var], *args,show_progress=show_progress,**kwargs)
+            merged = merge(merged, all)
+
+        for key in self._type_info:
+            t = self._type_info[key]
+            if show_progress: print(f'\nRead {t.aerosol_name} data')
+
+            all = self.read_grads_all(grads_dir, [t.var_name], *args,zrange=[1,t.bin_num],show_progress=show_progress,**kwargs)
+            merged = merge(merged, all)
+
+        # merged
+        if cal_total:
+            df_avg = self.get_total_size_dist()
+            
+        return merged
 
     def get_grads_avg_from_info(self,grads_dir, type='mean',# Mean, median
                                  cal_total=True,                                 

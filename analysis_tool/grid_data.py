@@ -35,6 +35,9 @@ class GridData(Data,GridInfo):
         else:
             self._data[new_name] = data
 
+    def remove_data(self,key):
+        del self._data[key]
+
     def axis_avg(self,axes_names=['time'],mask=None,keys=None,selections={}):
         res = {}
         print('axis_avg')
@@ -43,7 +46,13 @@ class GridData(Data,GridInfo):
         for key in keys:
             if len(selections) == 0:
                 if len(self._data[key].shape) > 3:
-                    avg = np.nanmean(self._data[key],axis=3,keepdims=True)  #ad-hoc
+                    # avg = self._data[key].copy()
+                    avg=np.ma.array(self._data[key].copy(), mask=mask)
+                    for axis in axes_names:
+                        axis_ind = self._axis_names.index(axis)
+                        avg = np.nanmean(avg,axis=axis_ind,keepdims=True)  #ad-hoc
+                    # avg = np.nanmean(self._data[key],axis=3,keepdims=True)  #ad-hoc
+                    # avg = np.nanmean(self._data[key],axis=0,keepdims=True)  #ad-hoc
                 else:
                     avg = self._data[key]
                 print(avg.shape)
@@ -66,7 +75,6 @@ class GridData(Data,GridInfo):
                 #         avg = np.nanmean(avg,axis=axis_ind,keepdims=True)
             res[key] = avg
             print('Completed',key)
-        
         return res[keys[0]] if len(keys) == 1 else res
 
     def map_grid(self,grid_in,grid_name):
@@ -220,7 +228,7 @@ class GridData(Data,GridInfo):
             return pd.DataFrame(values,columns=keys)
 
         index_arrays = self.get_region_index_array(region_ranges)
-
+        print(len(index_arrays))
         values = {}
         for key in keys:   
             if mask is not None:          
@@ -233,17 +241,24 @@ class GridData(Data,GridInfo):
         
         return pd.DataFrame(values,columns=keys)
 
-    def get_point_data(self,lat,lon,**kwargs):
-        return self.get_values_region({'lats':[lat-0.01,lat+0.01],'lons':[lon-0.01,lon+0.01]},**kwargs)
+    def get_point_data(self,lat,lon,expected_len=None,**kwargs):
+        data = self.get_values_region({'lats':[lat-0.01,lat+0.01],'lons':[lon-0.01,lon+0.01]},**kwargs)
+        if expected_len is not None and len(data) != expected_len:
+            interval = len(data) // expected_len
+            print('Expected len = ', expected_len, 'Returned len = ', len(data), 'Interval = ', interval)
+            data = data[::interval].reset_index().drop(columns='index')
+            print('New len = ', len(data))
+        return data
 
-    def generate_point_data(self,site_info,lat_name='Latitude',lon_name='Longitude',**kwargs):
+    def generate_point_data(self,site_info,lat_name='Latitude',lon_name='Longitude',expected_len=None,**kwargs):
         point_data = PointData()
         point_data.set_site_info(site_info)
         for site in site_info.index:
             print('Generate data at ', site)
             lat = site_info.loc[site,lat_name]
             lon = site_info.loc[site,lon_name]
-            data = self.get_point_data(lat,lon,**kwargs)
+            data = self.get_point_data(lat,lon,expected_len,**kwargs)
+            print(len(data))
             data['Site name'] = site
             point_data._all_data = point_data._all_data.append(data)
 

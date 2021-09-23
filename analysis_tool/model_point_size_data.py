@@ -36,25 +36,36 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
     def type_info(self, type_info_list):
         self._type_info = type_info_list and {t.aerosol_name: t for t in type_info_list}
 
-    def get_grads_all_from_info(self, grads_dir, show_progress=True, cal_total=True, to_dlnr=False,to_dlogr=False,extra_var=[],*args, **kwargs):
+    def get_grads_all_from_info(self, grads_dir, show_progress=True, cal_total=True, to_dlnr=False,to_dlogr=False,extra_var=[],op='',op_extra='',*args, **kwargs):
+
+        
 
         merged = None
         
         for var in extra_var:
             print('Read ', var)
-            all = self.read_grads_all(grads_dir, [var], *args,show_progress=show_progress,**kwargs)
+            all = self.read_grads_all(grads_dir, [var], *args,show_progress=show_progress,op=op_extra,**kwargs)
             merged = merge(merged, all)
 
         for key in self._type_info:
+            # Set up
             t = self._type_info[key]
             if show_progress: print(f'\nRead {t.aerosol_name} data')
+            if to_dlnr:
+                dlnr = np.log(t.bin_centers[1]/2)-np.log(t.bin_centers[0]/2)
+            else:
+                dlnr = 1
 
-            all = self.read_grads_all(grads_dir, [t.var_name], *args,zrange=[1,t.bin_num],show_progress=show_progress,**kwargs)
+            # Read 
+            all = self.read_grads_all(grads_dir, [t.var_name], *args,zrange=[1,t.bin_num],show_progress=show_progress,op=op, **kwargs)
+
+            # Post-processing
+            cols = [col for col in all.columns if t.var_name in col]
+            all[cols] = all[cols]/dlnr
             merged = merge(merged, all)
 
-        # merged
         if cal_total:
-            df_avg = self.get_total_size_dist()
+            merged = self.get_total_size_dist(merged)
             
         return merged
 
@@ -103,12 +114,12 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
         self._avg_data = df_avg
 
         if cal_total:
-            df_avg = self.get_total_size_dist()
+            df_avg = self.get_total_size_dist(df_avg)
             self._avg_data = df_avg
 
         return df_avg
 
-    def get_total_size_dist(self): 
+    def get_total_size_dist(self, data): 
         def map_row_values(row):
             total =  np.zeros((self._bin_num,))
             for key in self._type_info:
@@ -120,12 +131,12 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
                 total += mapped
             return total
         
-        df_total = pd.DataFrame(self._avg_data.apply(lambda x: map_row_values(x),axis=1)        
+        df_total = pd.DataFrame(data.apply(lambda x: map_row_values(x),axis=1)        
                                 .values.tolist(), 
                                 columns=self.varlist,
-                                index=self._avg_data.index)
+                                index=data.index)
         
-        return (self._avg_data.drop(columns=self.varlist,errors='ignore')
+        return (data.drop(columns=self.varlist,errors='ignore')
                  .merge(df_total,left_index=True,right_index=True))
         
     def set_avg_to_all(self):

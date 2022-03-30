@@ -1,7 +1,7 @@
 from grid_data import GridData
 from analysis_utils import dt64_to_dt, ax_set
 
-import os
+import os, sys
 import pandas as pd
 import numpy as np
 from pyhdf.SD import SD, SDC
@@ -75,6 +75,7 @@ class ModisGridData(GridData):
             for key in fields:
                 field = fields[key]
                 print('Reading ', field)
+                sys.stdout.flush()
 
                 sds_obj = hdf.select(field)
                 data = sds_obj.get()

@@ -288,6 +288,7 @@ class ModelGridData(GridData):
         rho = self._data[rho_name]
 
         qc = np.where(qc==0.0,np.nan,qc)
+        
         Nc = unccn*1e-6
         dens = rho
         rhoqc = dens * qc * 1000.0

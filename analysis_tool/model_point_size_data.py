@@ -38,8 +38,6 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
 
     def get_grads_all_from_info(self, grads_dir, show_progress=True, cal_total=True, to_dlnr=False,to_dlogr=False,extra_var=[],op='',op_extra='',*args, **kwargs):
 
-        
-
         merged = None
         
         for var in extra_var:
@@ -57,6 +55,7 @@ class ModelPointSizeData(ModelPointData,TypeSizeInfo):
                 dlnr = 1
 
             # Read 
+            print(grads_dir, [t.var_name], [1,t.bin_num])
             all = self.read_grads_all(grads_dir, [t.var_name], *args,zrange=[1,t.bin_num],show_progress=show_progress,op=op, **kwargs)
 
             # Post-processing
